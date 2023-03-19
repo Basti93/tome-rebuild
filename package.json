@@ -5,14 +5,21 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "axios": "^1.1.2",
+        "axios": "^1.3.4",
         "laravel-vite-plugin": "^0.7.2",
         "vite": "^4.0.0"
     },
     "dependencies": {
+        "@apollo/client": "^3.7.10",
         "@vitejs/plugin-vue": "^4.1.0",
+        "@vue/apollo-composable": "^4.0.0-beta.4",
+        "graphql": "^16.6.0",
+        "graphql-tag": "^2.12.6",
         "vue": "^3.2.36",
         "vue-loader": "^17.0.1",
-        "vuetify": "^3.1.10"
+        "vue-router": "^4.1.6",
+        "vuetify": "^3.1.10",
+        "vuex": "^4.1.0",
+        "vuex-persistedstate": "^4.1.0"
     }
 }

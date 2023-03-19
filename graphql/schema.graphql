@@ -39,3 +39,15 @@ type User {
     "When the account was last updated."
     updated_at: DateTime!
 }
+
+type AccessToken {
+    token: String!
+}
+
+extend type Mutation {
+    login(email: String! @rules(apply: ["email"]), password: String!): AccessToken! @field(resolver: "App\\GraphQL\\Mutations\\AuthMutation@login")
+}
+
+type Query {
+    me: User @auth
+}
