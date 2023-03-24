@@ -5,6 +5,7 @@
         "build": "vite build"
     },
     "devDependencies": {
+        "@mdi/font": "^7.2.96",
         "@rollup/plugin-graphql": "^2.0.3",
         "axios": "^1.3.4",
         "laravel-vite-plugin": "^0.7.2",

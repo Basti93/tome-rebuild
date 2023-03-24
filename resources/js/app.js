@@ -10,11 +10,22 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { VDataTableServer } from 'vuetify/labs/VDataTable'
+import {de} from 'vuetify/locale'
+import '@mdi/font/css/materialdesignicons.css'
+
 
 
 const vuetify = createVuetify({
-    components,
+    components: {
+        ...components,
+       VDataTableServer
+    },
     directives,
+    locale: {
+        locale: 'de',
+        messages: { de }
+    }
 })
 
 createApp({

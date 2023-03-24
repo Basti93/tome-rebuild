@@ -1,0 +1,18 @@
+query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderByOrderByClause!], $search: String) {
+    users(first: $first, page: $page, orderBy: $orderBy, name: $search) {
+        paginatorInfo {
+            total
+            currentPage
+            hasMorePages
+            lastItem
+            lastPage
+            perPage
+            count
+        }
+        data {
+            id
+            name
+            email
+        }
+    }
+}
