@@ -13,6 +13,41 @@ export default [
                 name: "Login",
                 component: () => import("@/views/Login.vue"),
             },
+            {
+                path: "/register",
+                name: "Register",
+                component: () => import("@/views/Register.vue"),
+            },
+            {
+                path: "/users",
+                name: "Users",
+                component: () => import("@/views/Users.vue"),
+            },
+            {
+                path: "/profile",
+                name: "Profile",
+                component: () => import("@/views/Profile.vue"),
+            },
+            {
+                path: "/logout",
+                name: "Logout",
+                component: () => import("@/views/Logout.vue"),
+            },
+            {
+                path: "/forgot-password",
+                name: "ForgotPassword",
+                component: () => import("@/views/ForgotPassword.vue"),
+            },
+            {
+                path: "/verify-email",
+                name: "VerifyEmail",
+                component: () => import("@/views/VerifyEmail.vue"),
+            },
+            {
+                path: "/reset-password",
+                name: "ResetPassword",
+                component: () => import("@/views/ResetPassword.vue"),
+            }
         ],
     },
 ];

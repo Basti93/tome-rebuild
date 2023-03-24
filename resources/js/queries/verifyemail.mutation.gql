@@ -1,0 +1,10 @@
+mutation verifyEmail ($id: ID!, $hash: String!, $expires: Int!, $signature: String!) {
+    verifyEmail(input: {
+        id: $id
+        hash: $hash
+        expires: $expires
+        signature: $signature
+    }) {
+        status
+    }
+}

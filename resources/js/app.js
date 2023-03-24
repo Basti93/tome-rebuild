@@ -1,6 +1,7 @@
 import {createApp, provide, h} from 'vue'
 import App from './App.vue'
 import router from "./router";
+import store from "./store";
 import { DefaultApolloClient } from '@vue/apollo-composable'
 import apolloClient from "./apollo";
 
@@ -21,4 +22,4 @@ createApp({
         provide(DefaultApolloClient, apolloClient)
     },
     render: () => h(App),
-}).use(router).use(vuetify).mount('#app')
+}).use(router).use(store).use(vuetify).mount('#app')
