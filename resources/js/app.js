@@ -5,32 +5,23 @@ import store from "./store";
 import { DefaultApolloClient } from '@vue/apollo-composable'
 import apolloClient from "./apollo";
 
-// Vuetify
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
-import { VDataTableServer } from 'vuetify/labs/VDataTable'
-import {de} from 'vuetify/locale'
-import '@mdi/font/css/materialdesignicons.css'
+//Quasar
+import { Quasar, Notify, Dialog } from 'quasar'
+import quasarLang from 'quasar/lang/de'
 
+// Import icon libraries
+import '@quasar/extras/roboto-font/roboto-font.css'
+import '@quasar/extras/material-icons/material-icons.css'
 
-
-const vuetify = createVuetify({
-    components: {
-        ...components,
-       VDataTableServer
-    },
-    directives,
-    locale: {
-        locale: 'de',
-        messages: { de }
-    }
-})
+// Import Quasar css
+import 'quasar/src/css/index.sass'
 
 createApp({
     setup () {
         provide(DefaultApolloClient, apolloClient)
     },
     render: () => h(App),
-}).use(router).use(store).use(vuetify).mount('#app')
+}).use(router).use(store).use(Quasar, {
+    plugins: {Notify, Dialog}, // import Quasar plugins and add here
+    lang: quasarLang,
+}).mount('#app')

@@ -1,17 +1,17 @@
-import apolloClient from "../apollo";
-import loginMutation from "../queries/login.mutation.gql"
-import logoutMutation from "../queries/logout.mutation.gql"
-import meQuery from "../queries/me.query.gql"
-import router from '../router'
+import apolloClient from "../../apollo";
+import loginMutation from "../../queries/login.mutation.gql"
+import logoutMutation from "../../queries/logout.mutation.gql"
+import meQuery from "../../queries/me.query.gql"
+import router from '../../router'
 
 export default {
     namespaced: true,
-    state: () => ({
+    state: {
         accessToken: null,
         user: null,
         loggingIn: false,
         loginError: null
-    }),
+    },
     mutations: {
         loginStart: state => state.loggingIn = true,
         loginStop: (state, errorMessage) => {

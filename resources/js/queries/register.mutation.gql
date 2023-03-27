@@ -1,6 +1,20 @@
-mutation register ($name: String!, $email: String!, $password: String!, $password_confirmation: String!, $url: String!) {
+mutation register (
+    $firstname: String!,
+    $lastname: String!,
+    $nickname: String,
+    $phone: String,
+    $birthdate: Date!,
+    $email: String!,
+    $password: String!,
+    $password_confirmation: String!,
+    $url: String!
+) {
     register(input: {
-        name: $name,
+        firstname: $firstname,
+        lastname: $lastname,
+        nickname: $nickname,
+        birthdate: $birthdate,
+        phone: $phone,
         email: $email,
         password: $password,
         password_confirmation:

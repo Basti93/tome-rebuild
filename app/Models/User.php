@@ -19,7 +19,11 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'nickname',
+        'firstname',
+        'lastname',
+        'birthdate',
+        'phone',
         'email',
         'password',
     ];
@@ -41,5 +45,6 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'birthdate' => 'datetime',
     ];
 }

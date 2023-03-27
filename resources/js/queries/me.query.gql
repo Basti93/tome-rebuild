@@ -1,6 +1,10 @@
 query me {
     me {
-        name
+        firstname
+        lastname
+        nickname
+        birthdate
+        phone
         email
     }
 }

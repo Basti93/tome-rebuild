@@ -1,5 +1,5 @@
-query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderByOrderByClause!], $search: String) {
-    users(first: $first, page: $page, orderBy: $orderBy, name: $search) {
+query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderByOrderByClause!], $filter: String) {
+    users(first: $first, page: $page, orderBy: $orderBy, firstname: $filter) {
         paginatorInfo {
             total
             currentPage
@@ -11,7 +11,11 @@ query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderB
         }
         data {
             id
-            name
+            firstname
+            lastname
+            birthdate
+            nickname
+            phone
             email
         }
     }

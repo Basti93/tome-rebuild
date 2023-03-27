@@ -1,23 +1,23 @@
 <template>
   Logout
 </template>
-<script>
+<script >
 
-import router from "../router";
-import {mapActions} from "vuex";
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+import {onMounted} from "vue";
+
 
 export default {
-  data() {
-    return {}
-  },
-  methods: {
-    ...mapActions('auth', [
-      'doLogout'
-    ]),
-  },
-  created () {
-    this.doLogout();
-    router.push("/home")
+  setup() {
+    const store = useStore();
+    const router = useRouter();
+    onMounted(() => {
+      store.dispatch('auth/doLogout');
+      router.push("/home")
+    })
+
+
   }
 }
 </script>

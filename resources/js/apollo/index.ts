@@ -1,6 +1,5 @@
 import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core'
 import { setContext } from 'apollo-link-context';
-import store from '../store'
 
 // XSRF token is required to make post requests to your Laravel backend
 const authLink = setContext((_, { headers }) => {

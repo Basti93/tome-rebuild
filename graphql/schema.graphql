@@ -1,5 +1,6 @@
 "A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
 scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 
 #import sanctum.graphql
 
@@ -17,9 +18,14 @@ type Query {
     "List multiple users."
     users(
       "Filters by name. Accepts SQL LIKE wildcards `%` and `_`."
-      name: String @where(operator: "like")
-      orderBy: _ @orderBy(columns: ["id", "name", "email"])
-    ): [User!]! @paginate(defaultCount: 10)
+      firstname: String @where(operator: "like")
+      orderBy: _ @orderBy(columns: ["id", "nickname", "firstname", "lastname", "birthdate"])
+    ): [User!]! @paginate(defaultCount: 25) @softDeletes
 
     me: User @auth
+
+}
+
+extend type Mutation {
+    deleteUser(id: ID! @where(operator: "=")): User @delete
 }

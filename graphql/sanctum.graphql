@@ -1,6 +1,10 @@
 type User {
     id: ID!
-    name: String!
+    nickname: String
+    firstname: String!
+    lastname: String!
+    birthdate: DateTime!
+    phone: String
     email: String!
 }
 
@@ -67,8 +71,12 @@ input ResendEmailVerificationInput {
 }
 
 input RegisterInput {
-    name: String!
-    email: String! @rules(apply: ["bail", "email", "unique:users,email"])
+    firstname: String! @rules(apply: ["required"])
+    lastname: String! @rules(apply: ["required"])
+    nickname: String
+    phone: String
+    birthdate: Date! @rules(apply: ["required", "date"])
+    email: String! @rules(apply: ["required", "bail", "email", "unique:users,email"])
     password: String! @rules(apply: ["confirmed", "min: 8"])
     password_confirmation: String!
     verification_url: VerificationUrlInput
