@@ -27,14 +27,14 @@ class PermissionSeeder extends Seeder
         $user[] = Permission::updateOrCreate(['id' => 1], ['name' => 'edit-user']);
         $user[] = Permission::updateOrCreate(['id' => 2], ['name' => 'view-user']);
 
-        /**
-         * Permissões de Funções
-         */
-        $role[] = Permission::updateOrCreate(['id' => 11], ['name' => 'edit-role']);
-        $role[] = Permission::updateOrCreate(['id' => 12], ['name' => 'view-role']);
-        Permission::updateOrCreate(['id' => 13], ['name' => 'view-role-admin']);
-        $role[] = Permission::updateOrCreate(['id' => 14], ['name' => 'view-role-trainer']);
-        $role[] = Permission::updateOrCreate(['id' => 15], ['name' => 'view-role-user']);
+
+        $user[] = Permission::updateOrCreate(['id' => 3], ['name' => 'login']);
+
+        $role[] = Permission::updateOrCreate(['id' => 4], ['name' => 'edit-role']);
+        $role[] = Permission::updateOrCreate(['id' => 5], ['name' => 'view-role']);
+        Permission::updateOrCreate(['id' => 6], ['name' => 'view-role-admin']);
+        $role[] = Permission::updateOrCreate(['id' => 7], ['name' => 'view-role-trainer']);
+        $role[] = Permission::updateOrCreate(['id' => 8], ['name' => 'view-role-user']);
 
 
 

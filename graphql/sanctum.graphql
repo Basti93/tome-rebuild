@@ -6,6 +6,7 @@ type User {
     birthdate: DateTime!
     phone: String
     email: String!
+    approved: Boolean!
 }
 
 type AccessToken {
@@ -156,7 +157,7 @@ enum UpdatePasswordStatus {
 
 extend type Mutation {
     login(input: LoginInput @spread): AccessToken!
-        @field(resolver: "DanielDeWit\\LighthouseSanctum\\GraphQL\\Mutations\\Login")
+        @field(resolver: "App\\GraphQL\\Mutations\\Login")
     logout: LogoutResponse! @guard
         @field(resolver: "DanielDeWit\\LighthouseSanctum\\GraphQL\\Mutations\\Logout")
     register(input: RegisterInput @spread): RegisterResponse!

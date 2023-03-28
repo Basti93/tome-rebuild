@@ -1,0 +1,29 @@
+mutation updateUser (
+    $id: ID!,
+    $firstname: String,
+    $lastname: String,
+    $nickname: String,
+    $phone: String,
+    $birthdate: Date,
+    $email: String,
+    $approved: Boolean,
+) {
+    updateUser(id: $id, input: {
+        firstname: $firstname,
+        lastname: $lastname,
+        nickname: $nickname,
+        birthdate: $birthdate,
+        phone: $phone,
+        email: $email,
+        approved: $approved,
+    }) {
+        id
+        firstname
+        lastname
+        nickname
+        birthdate
+        phone
+        email
+        approved
+    }
+}

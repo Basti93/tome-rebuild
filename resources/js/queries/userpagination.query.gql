@@ -17,6 +17,7 @@ query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderB
             nickname
             phone
             email
+            approved
         }
     }
 }

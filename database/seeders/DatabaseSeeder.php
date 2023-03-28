@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
              'lastname' => 'Binder',
              'nickname' => 'Sebi',
              'birthdate' => '1993-06-07',
-             'email' => 'bindersebastian@online.de'
+             'email' => 'bindersebastian@online.de',
+             'approved' => true
          ]);
 
         $this->call(PermissionSeeder::class);

@@ -2,6 +2,7 @@
 scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 
+#import role.graphql
 #import sanctum.graphql
 
 enum UserToAdminStatus {
@@ -12,6 +13,17 @@ enum UserToAdminStatus {
 type UserToAdminResponse {
     status: UserToAdminStatus!
     message: String!
+}
+
+
+input UserInput {
+    firstname: String
+    lastname: String
+    nickname: String
+    phone: String
+    birthdate: Date
+    email: String @rules(apply: ["bail", "email", "unique:users,email"])
+    approved: Boolean
 }
 
 "Indicates what fields are available at the top level of a query operation."
@@ -29,14 +41,15 @@ type Query @guard {
     users(
       "Filters by name. Accepts SQL LIKE wildcards `%` and `_`."
       firstname: String @where(operator: "like")
-      orderBy: _ @orderBy(columns: ["id", "nickname", "firstname", "lastname", "birthdate"])
-    ): [User!]! @can(ability: "view-user") @paginate(defaultCount: 25) @softDeletes
+      orderBy: _ @orderBy(columns: ["id", "nickname", "firstname", "lastname", "birthdate", "approved"])
+    ): [User!]! @can(ability: "view") @paginate(defaultCount: 25) @softDeletes
 
     me: User @auth
 
 }
 
 extend type Mutation @guard {
+    updateUser(id: ID!, input: UserInput  @spread): User @can(ability: "edit-user") @field(resolver: "\\App\\GraphQL\\Mutations\\UpdateUser")
     deleteUser(id: ID! @where(operator: "=")): User @delete @can(ability: "edit-user")
     userToAdmin(id: ID!): UserToAdminResponse @can(ability: "adminOnly") @field(resolver: "\\App\\GraphQL\\Mutations\\UserToAdmin")
 }

@@ -29,6 +29,7 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         'phone',
         'email',
         'password',
+        'approved',
     ];
 
     /**

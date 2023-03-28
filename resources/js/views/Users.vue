@@ -21,14 +21,6 @@
             @request="onRequest"
         >
           <template v-slot:top>
-            <q-btn class="q-ml-sm" color="primary" :disable="selected.length != 1 || loading" @click="edit">
-              <q-icon left name="edit" />
-              <div>Bearbeiten</div>
-            </q-btn>
-            <q-btn class="q-ml-sm" color="primary" :disable="selected.length == 0 || loading" @click="edit">
-              <q-icon left name="edit" />
-              <div>Zum Admin machen</div>
-            </q-btn>
             <q-btn class="q-ml-sm" color="red" :disable="selected.length == 0 || loading" @click="confirmDelete">
               <q-icon left name="delete" />
               <div>Löschen</div>
@@ -41,6 +33,90 @@
             </q-input>
           </template>
 
+          <template v-slot:body="props">
+            <q-tr :props="props">
+              <q-td>
+                <q-checkbox v-model="props.selected"/>
+              </q-td>
+              <q-td key="id" :props="props">{{ props.row.id }}</q-td>
+              <q-td key="nickname" :props="props">{{ props.row.nickname }}
+                <q-popup-edit :model-value="props.row.nickname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'nickname', value)">
+                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                    <template v-slot:after>
+                      <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                      />
+
+                      <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                      />
+                    </template>
+                  </q-input>
+                </q-popup-edit>
+              </q-td>
+              <q-td key="firstname" :props="props">
+                {{ props.row.firstname }}
+                <q-popup-edit :model-value="props.row.firstname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'firstname', value)">
+                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                    <template v-slot:after>
+                      <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                      />
+
+                      <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                      />
+                    </template>
+                  </q-input>
+                </q-popup-edit>
+              </q-td>
+
+              <q-td key="lastname" :props="props">{{ props.row.lastname }}
+                <q-popup-edit :model-value="props.row.lastname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'lastname', value)">
+                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                    <template v-slot:after>
+                      <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                      />
+
+                      <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                      />
+                    </template>
+                  </q-input>
+                </q-popup-edit>
+              </q-td>
+              <q-td key="birthdate" :props="props">{{ props.row.birthdate }}
+                <q-popup-edit :model-value="props.row.birthdate" v-slot="scope" @save="(value) => updateUser(props.row.id, 'birthdate', value)">
+                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                    <template v-slot:after>
+                      <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                      />
+
+                      <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                      />
+                    </template>
+                  </q-input>
+                </q-popup-edit>
+              </q-td>
+              <q-td key="approved" :props="props">
+                <q-btn v-if="props.row.approved" @click="updateUser(props.row.id, 'approved', false)" flat round><q-icon color="green" name="check" /></q-btn>
+                <q-btn v-if="!props.row.approved" @click="updateUser(props.row.id, 'approved', true)"  flat round><q-icon color="red" name="cancel" /></q-btn>
+              </q-td>
+
+            </q-tr>
+          </template>
+
         </q-table>
       </div>
     </div>
@@ -50,6 +126,7 @@
 
 import usersPaginationQuery from "../queries/userpagination.query.gql";
 import deleteUsersMutation from "../queries/userdelete.mutation.gql";
+import updateUsersMutation from "../queries/userupdate.mutation.gql";
 import {computed, onMounted, ref} from "vue";
 import apolloClient from "../apollo";
 import {date} from 'quasar'
@@ -63,13 +140,14 @@ export default {
     const store = useStore();
     const tableRef = ref()
     const filter = ref('')
+    const firstnameEdit = ref('');
     const rows = ref([])
     const selected = ref([])
     const loading = ref(false)
     const me = computed(() => store.state.auth.user)
     const pagination = ref({
       sortBy: 'id',
-      descending: false,
+      descending: true,
       page: 1,
       rowsPerPage: 10,
       rowsNumber: 10
@@ -81,10 +159,9 @@ export default {
       {name: 'lastname', align: 'center', label: 'Nachname', field: 'lastname', sortable: true},
       {name: 'birthdate', align: 'center', label: 'Geburtsdatum', field: 'birthdate', sortable: true, format: (val) => {
           return date.formatDate(date.extractDate(val, 'YYYY-MM-DD'), 'YYYY-MM-DD');
-      }}
+      }},
+      {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: true,}
     ]
-
-
     const onRequest = async (props) => {
       loading.value = true
       const {page, rowsPerPage, sortBy, descending} = props.pagination
@@ -156,6 +233,23 @@ export default {
       loading.value = false
     }
 
+    const updateUser = async (userId, field, value) => {
+      loading.value = true;
+      const {data} = await apolloClient.mutate({
+        mutation: updateUsersMutation,
+        variables: {id: userId, [field]: value}
+      })
+      $q.notify({
+        message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
+        color: 'positive'})
+
+      const index = rows.value.findIndex(row => row.id == data.updateUser.id);
+      if (index > -1) { // only splice array when item is found
+        rows.value[index] = data.updateUser
+      }
+      loading.value = false;
+    }
+
     onMounted(() => {
       // get initial data from server (1st page)
       tableRef.value.requestServerInteraction()
@@ -173,7 +267,9 @@ export default {
       selected,
       deleteUsers,
       confirmDelete,
+      updateUser,
       me,
+      firstnameEdit,
     }
   },
 }
