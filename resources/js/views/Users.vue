@@ -21,7 +21,18 @@
             @request="onRequest"
         >
           <template v-slot:top>
-            <q-btn class="q-ml-sm" color="primary" :disable="selected.length == 0 || loading" label="Benutzer löschen" @click="confirmDelete" />
+            <q-btn class="q-ml-sm" color="primary" :disable="selected.length != 1 || loading" @click="edit">
+              <q-icon left name="edit" />
+              <div>Bearbeiten</div>
+            </q-btn>
+            <q-btn class="q-ml-sm" color="primary" :disable="selected.length == 0 || loading" @click="edit">
+              <q-icon left name="edit" />
+              <div>Zum Admin machen</div>
+            </q-btn>
+            <q-btn class="q-ml-sm" color="red" :disable="selected.length == 0 || loading" @click="confirmDelete">
+              <q-icon left name="delete" />
+              <div>Löschen</div>
+            </q-btn>
             <q-space />
             <q-input filled dense debounce="300" color="primary" v-model="filter">
               <template v-slot:append>
@@ -39,20 +50,23 @@
 
 import usersPaginationQuery from "../queries/userpagination.query.gql";
 import deleteUsersMutation from "../queries/userdelete.mutation.gql";
-import {onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import apolloClient from "../apollo";
 import {date} from 'quasar'
 import { useQuasar } from 'quasar'
+import {useStore} from "vuex";
 
 
 export default {
   setup() {
     const $q = useQuasar()
+    const store = useStore();
     const tableRef = ref()
     const filter = ref('')
     const rows = ref([])
     const selected = ref([])
     const loading = ref(false)
+    const me = computed(() => store.state.auth.user)
     const pagination = ref({
       sortBy: 'id',
       descending: false,
@@ -113,10 +127,11 @@ export default {
     const confirmDelete = () => {
           $q.dialog({
             title: 'Löschen Bestätigen',
-            message: 'Folgende Benutzer wirklich löschen? ' + selected.value.map(function(item) {
-              return item['firstname'] + ' ' + item['lastname'] + ', ';
-            }),
+            message: 'Folgende Benutzer wirklich löschen? <ul>' + selected.value.map(function(item)  {
+              return '<li>' + item['id'] + ' - ' + item['firstname'] + ' ' + item['lastname'] + '</li>';
+            }) +"</ul>",
             cancel: true,
+            html: true,
             persistent: true
           }).onOk(() => {
             deleteUsers()
@@ -158,6 +173,7 @@ export default {
       selected,
       deleteUsers,
       confirmDelete,
+      me,
     }
   },
 }

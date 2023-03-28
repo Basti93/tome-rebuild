@@ -48,6 +48,7 @@ export default {
             }).catch(error => {
                 commit('loginStop', error.message);
                 commit('updateAccessToken', null);
+                localStorage.removeItem('accessToken');
                 commit('updateUser', null);
             });
 
@@ -56,6 +57,8 @@ export default {
             apolloClient.query({query: meQuery}).then((response => {
                 if (response.data.me != null) {
                     commit('updateUser', response.data.me);
+                } else {
+                    localStorage.removeItem('accessToken');
                 }
             }))
         },
