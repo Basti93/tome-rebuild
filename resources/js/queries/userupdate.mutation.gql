@@ -6,7 +6,7 @@ mutation updateUser (
     $phone: String,
     $birthdate: Date,
     $email: String,
-    $approved: Boolean,
+    $roles: [ID!]
 ) {
     updateUser(id: $id, input: {
         firstname: $firstname,
@@ -15,7 +15,7 @@ mutation updateUser (
         birthdate: $birthdate,
         phone: $phone,
         email: $email,
-        approved: $approved,
+        roles: $roles,
     }) {
         id
         firstname
@@ -24,6 +24,9 @@ mutation updateUser (
         birthdate
         phone
         email
-        approved
+        roles {
+            id
+            name
+        }
     }
 }

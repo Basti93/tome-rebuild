@@ -77,7 +77,7 @@ export default {
       },
       {
         icon: 'users',
-        label: 'Benutzer',
+        label: 'Mitglieder',
         separator: false,
         to: "/users",
         show: computed(() => showMenuItem(loggedIn, true, true))

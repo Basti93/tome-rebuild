@@ -1,10 +1,7 @@
 <template>
   <q-page class="full-height full-width row justify-center items-center">
     <div class="column">
-      <div class="row">
-        <h5 class="text-h5 q-my-md">Benutzer</h5>
-      </div>
-      <div class="row">
+      <div class="row q-pt-md">
         <q-table
             ref="tableRef"
             title="Users"
@@ -15,16 +12,14 @@
             v-model:pagination="pagination"
             :loading="loading"
             :filter="filter"
-            selection="multiple"
-            v-model:selected="selected"
             binary-state-sort
             @request="onRequest"
         >
           <template v-slot:top>
-            <q-btn class="q-ml-sm" color="red" :disable="selected.length == 0 || loading" @click="confirmDelete">
-              <q-icon left name="delete" />
-              <div>Löschen</div>
-            </q-btn>
+              <div>
+              <p class="text-h4">Mitglieder</p>
+              <p class="text-subtitle-1">Zum Editieren auf die Zeilen klicken</p>
+              </div>
             <q-space />
             <q-input filled dense debounce="300" color="primary" v-model="filter">
               <template v-slot:append>
@@ -35,9 +30,6 @@
 
           <template v-slot:body="props">
             <q-tr :props="props">
-              <q-td>
-                <q-checkbox v-model="props.selected"/>
-              </q-td>
               <q-td key="id" :props="props">{{ props.row.id }}</q-td>
               <q-td key="nickname" :props="props">{{ props.row.nickname }}
                 <q-popup-edit :model-value="props.row.nickname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'nickname', value)">
@@ -59,7 +51,10 @@
               <q-td key="firstname" :props="props">
                 {{ props.row.firstname }}
                 <q-popup-edit :model-value="props.row.firstname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'firstname', value)">
-                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                  <q-input v-model="scope.value"
+                           dense autofocus
+                           @keyup.enter="scope.set"
+                           :rules="[val => val && val.length > 0 || 'Feld darf nicht leer sein']">
                     <template v-slot:after>
                       <q-btn
                           flat dense color="negative" icon="cancel"
@@ -77,7 +72,10 @@
 
               <q-td key="lastname" :props="props">{{ props.row.lastname }}
                 <q-popup-edit :model-value="props.row.lastname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'lastname', value)">
-                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                  <q-input v-model="scope.value"
+                           dense autofocus
+                           @keyup.enter="scope.set"
+                           :rules="[val => val && val.length > 0 || 'Feld darf nicht leer sein']">
                     <template v-slot:after>
                       <q-btn
                           flat dense color="negative" icon="cancel"
@@ -92,9 +90,9 @@
                   </q-input>
                 </q-popup-edit>
               </q-td>
-              <q-td key="birthdate" :props="props">{{ props.row.birthdate }}
+              <q-td key="birthdate" :props="props">{{ date.formatDate(props.row.birthdate, 'DD.MM.YYYY') }}
                 <q-popup-edit :model-value="props.row.birthdate" v-slot="scope" @save="(value) => updateUser(props.row.id, 'birthdate', value)">
-                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                  <q-input type="date" :v-model="scope.value" mask="date" :rules="[val => !val || /^-?[\d]+\.[0-1]\d\.[0-3]\d$/.test(val) || 'Falsches Format']" dense autofocus @keyup.enter="scope.set">
                     <template v-slot:after>
                       <q-btn
                           flat dense color="negative" icon="cancel"
@@ -110,10 +108,38 @@
                 </q-popup-edit>
               </q-td>
               <q-td key="approved" :props="props">
-                <q-btn v-if="props.row.approved" @click="updateUser(props.row.id, 'approved', false)" flat round><q-icon color="green" name="check" /></q-btn>
-                <q-btn v-if="!props.row.approved" @click="updateUser(props.row.id, 'approved', true)"  flat round><q-icon color="red" name="cancel" /></q-btn>
+                <q-btn v-if="props.row.roles.length > 0" @click="removeUserRole(props.row)" size="xs" outline round icon="check" color="green" />
+                <q-btn v-if="props.row.roles.length === 0" @click="addUserRole(props.row)" size="xs" outline round icon="clear" color="red" />
               </q-td>
 
+              <q-td key="roles" :props="props">
+                  {{ props.row.roles.map(r => r.name).toString() }}
+                  <q-popup-edit @before-show="loadRoles()" :model-value="props.row.roles" v-slot="scope" @save="(value) => updateUser(props.row.id, 'roles', value.map(r => r.id))">
+                      <q-select v-model="scope.value" multiple dense autofocus @keyup.enter="scope.set" :options="roles" option-value="id" option-label="name">
+                          <template v-slot:after>
+                              <q-btn
+                                      flat dense color="negative" icon="cancel"
+                                      @click.stop.prevent="scope.cancel"
+                              />
+
+                              <q-btn
+                                      flat dense color="positive" icon="check_circle"
+                                      @click.stop.prevent="scope.set"
+                              />
+                          </template>
+                      </q-select>
+                  </q-popup-edit>
+              </q-td>
+              <q-td key="actions" :props="props">
+                  <q-btn round flat icon="more_vert">
+                  <q-menu auto-close v-ripple >
+                      <q-item clickable @click="confirmDelete(props.row)">
+                          <q-item-section avatar><q-icon name="person_remove"/></q-item-section>
+                          <q-item-section>Mitglied Löschen</q-item-section>
+                      </q-item>
+                  </q-menu>
+                  </q-btn>
+              </q-td>
             </q-tr>
           </template>
 
@@ -125,6 +151,7 @@
 <script>
 
 import usersPaginationQuery from "../queries/userpagination.query.gql";
+import rolesQuery from "../queries/roles.query.gql";
 import deleteUsersMutation from "../queries/userdelete.mutation.gql";
 import updateUsersMutation from "../queries/userupdate.mutation.gql";
 import {computed, onMounted, ref} from "vue";
@@ -132,9 +159,15 @@ import apolloClient from "../apollo";
 import {date} from 'quasar'
 import { useQuasar } from 'quasar'
 import {useStore} from "vuex";
+import {useLazyQuery} from "@vue/apollo-composable";
 
 
 export default {
+  computed: {
+    date() {
+      return date
+    }
+  },
   setup() {
     const $q = useQuasar()
     const store = useStore();
@@ -142,7 +175,6 @@ export default {
     const filter = ref('')
     const firstnameEdit = ref('');
     const rows = ref([])
-    const selected = ref([])
     const loading = ref(false)
     const me = computed(() => store.state.auth.user)
     const pagination = ref({
@@ -157,12 +189,15 @@ export default {
       {name: 'nickname', align: 'center', label: 'Spitzname', field: 'nickname', sortable: true},
       {name: 'firstname', align: 'center', label: 'Vorname', field: 'firstname', sortable: true},
       {name: 'lastname', align: 'center', label: 'Nachname', field: 'lastname', sortable: true},
-      {name: 'birthdate', align: 'center', label: 'Geburtsdatum', field: 'birthdate', sortable: true, format: (val) => {
-          return date.formatDate(date.extractDate(val, 'YYYY-MM-DD'), 'YYYY-MM-DD');
-      }},
-      {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: true,}
+      {name: 'birthdate', align: 'center', label: 'Geburtsdatum', field: 'birthdate', sortable: true,},
+      {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: true,},
+      {name: 'roles', align: 'center', label: 'Rollen', field: 'roles', sortable: false,},
+      {name: 'actions', align: 'center', label: 'Aktionen', field: '', sortable: false,},
     ]
-    const onRequest = async (props) => {
+    const {result: rolesResult, load: loadRoles} = useLazyQuery(rolesQuery);
+    const roles = computed(() => rolesResult.value?.roles ?? [])
+
+    const onRequest = (props) => {
       loading.value = true
       const {page, rowsPerPage, sortBy, descending} = props.pagination
       // calculate starting row of data
@@ -181,73 +216,130 @@ export default {
         variables.value.filter =  "%" + filter + "%";
       }
 
-      const {data} = await apolloClient.query({
+      apolloClient.query({
         query: usersPaginationQuery,
         variables: variables.value
+      }).then(({data}) => {
+          // update rowsCount with appropriate value
+          pagination.value.rowsNumber = data.users.paginatorInfo.total
+
+          // clear out existing data and add new
+          rows.value.splice(0, rows.value.length, ...data.users.data)
+
+          // don't forget to update local pagination object
+          pagination.value.page = page
+          pagination.value.rowsPerPage = rowsPerPage
+          pagination.value.sortBy = sortBy
+          pagination.value.descending = descending
+      }).catch(() => {
+          $q.notify({
+              message: 'Daten konnten nicht geladen werden',
+              color: 'negative'})
+      }).finally(() => {
+          loading.value = false
       })
-
-      // update rowsCount with appropriate value
-      pagination.value.rowsNumber = data.users.paginatorInfo.total
-
-      // clear out existing data and add new
-      rows.value.splice(0, rows.value.length, ...data.users.data)
-
-      // don't forget to update local pagination object
-      pagination.value.page = page
-      pagination.value.rowsPerPage = rowsPerPage
-      pagination.value.sortBy = sortBy
-      pagination.value.descending = descending
-
-      loading.value = false
     }
 
-    const confirmDelete = () => {
+    const confirmDelete = (user) => {
           $q.dialog({
             title: 'Löschen Bestätigen',
-            message: 'Folgende Benutzer wirklich löschen? <ul>' + selected.value.map(function(item)  {
-              return '<li>' + item['id'] + ' - ' + item['firstname'] + ' ' + item['lastname'] + '</li>';
-            }) +"</ul>",
+            message: 'Mitglied "' + user['id'] + ' - ' + user['firstname'] + ' ' + user['lastname'] + '" wirklich löschen?',
             cancel: true,
             html: true,
             persistent: true
           }).onOk(() => {
-            deleteUsers()
+            deleteUser(user)
           })
     }
-    const deleteUsers = async () => {
+    const deleteUser = (user) => {
       loading.value = true
-      for (const userToDelete of selected.value) {
-        const {data} = await apolloClient.mutate({
-          mutation: deleteUsersMutation,
-          variables: {id: userToDelete.id}
-        })
+      apolloClient.mutate({
+        mutation: deleteUsersMutation,
+        variables: {id: user.id}
+      }).then(({data}) => {
         $q.notify({
-          message: 'Benutzer ' + data.deleteUser.firstname + " " + data.deleteUser.lastname + ' gelöscht',
-          color: 'positive'})
-        const index = rows.value.indexOf(userToDelete);
+            message: 'Benutzer ' + data.deleteUser.firstname + " " + data.deleteUser.lastname + ' gelöscht',
+            color: 'positive'})
+        const index = rows.value.indexOf(user);
         if (index > -1) { // only splice array when item is found
-          rows.value.splice(index, 1); // 2nd parameter means remove one item only
+            rows.value.splice(index, 1); // 2nd parameter means remove one item only
         }
-      }
-      selected.value = []
-      loading.value = false
+      }).catch(() => {
+        $q.notify({
+            message: 'Benutzer ' + user.firstname + " " + user.lastname + ' konnte nicht gelöscht werden',
+            color: 'negative'})
+      }).finally(() => {
+          loading.value = false
+      })
     }
 
-    const updateUser = async (userId, field, value) => {
+    const updateUser = (userId, field, value) => {
       loading.value = true;
-      const {data} = await apolloClient.mutate({
+      apolloClient.mutate({
         mutation: updateUsersMutation,
         variables: {id: userId, [field]: value}
+      }).then(({data}) => {
+          $q.notify({
+              message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
+              color: 'positive'})
+          const index = rows.value.findIndex(row => row.id == data.updateUser.id);
+          if (index > -1) { // only splice array when item is found
+              rows.value[index] = data.updateUser
+          }
+      }).catch(() => {
+          $q.notify({
+              message: 'Benutzer konnte nicht aktualisiert werden',
+              color: 'negative'})
+      }).finally(() => {
+          loading.value = false;
       })
-      $q.notify({
-        message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
-        color: 'positive'})
+    }
 
-      const index = rows.value.findIndex(row => row.id == data.updateUser.id);
-      if (index > -1) { // only splice array when item is found
-        rows.value[index] = data.updateUser
-      }
-      loading.value = false;
+    const addUserRole = (user) => {
+        loading.value = true;
+        const existingRoles = user.roles.map(role => role.id);
+        existingRoles.push(3);
+        apolloClient.mutate({
+            mutation: updateUsersMutation,
+            variables: {id: user.id, 'roles': existingRoles}
+        }).then(({data}) => {
+            $q.notify({
+                message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
+                color: 'positive'})
+            const index = rows.value.findIndex(row => row.id == data.updateUser.id);
+            if (index > -1) { // only splice array when item is found
+                rows.value[index] = data.updateUser
+            }
+        }).catch(() => {
+            $q.notify({
+                message: 'Benutzer konnte nicht aktualisiert werden',
+                color: 'negative'})
+        }).finally(() => {
+            loading.value = false;
+        })
+
+    }
+    const removeUserRole = (user) => {
+        loading.value = true;
+        apolloClient.mutate({
+            mutation: updateUsersMutation,
+            variables: {id: user.id, 'roles': user.roles.map(r => r.id).filter(id => id !== "3")}
+        }).then(({data}) => {
+            $q.notify({
+                message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
+                color: 'positive'})
+            const index = rows.value.findIndex(row => row.id == data.updateUser.id);
+            if (index > -1) { // only splice array when item is found
+                rows.value[index] = data.updateUser
+            }
+        }).catch(() => {
+            $q.notify({
+                message: 'Benutzer konnte nicht aktualisiert werden',
+                color: 'negative'})
+        }).finally(() => {
+            loading.value = false;
+        })
+
     }
 
     onMounted(() => {
@@ -264,12 +356,15 @@ export default {
       onRequest,
       pagination,
       columns,
-      selected,
-      deleteUsers,
+      deleteUser,
       confirmDelete,
       updateUser,
+        removeUserRole,
+        addUserRole,
       me,
       firstnameEdit,
+      roles,
+      loadRoles
     }
   },
 }

@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -47,8 +46,22 @@ class UserPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, User $model): bool
+    public function update(User $user, $args): bool
     {
+        if (isset($args['roles'])) {
+            if (!$user->hasPermissionTo('edit-role')) {
+                return false;
+            }
+            if ($user->id == $args['id']) {
+                return false;
+            }
+            if (in_array(1, $args['roles']) && !$user->hasPermissionTo('edit-role-admin')) {
+                return false;
+            }
+            if (in_array(2, $args['roles']) && !$user->hasPermissionTo('edit-role-trainer')) {
+                return false;
+            }
+        }
         return $user->hasPermissionTo('edit-user');
     }
 
@@ -57,7 +70,12 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-        return $model->hasRole("user") && $user->hasPermissionTo('edit-user');
+        if ($user->id === $model->id) {
+           return false;
+        }
+        return !$model->hasRole("trainer")
+            && !$model->hasRole("admin")
+            && $user->hasPermissionTo('edit-user');
     }
 
     /**

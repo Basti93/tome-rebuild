@@ -60,7 +60,9 @@ export default {
                 } else {
                     localStorage.removeItem('accessToken');
                 }
-            }))
+            })).catch((res) => {
+                localStorage.removeItem('accessToken');
+            })
         },
         fetchAccessToken({commit}) {
             commit('updateAccessToken', localStorage.getItem('accessToken'));

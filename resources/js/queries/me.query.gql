@@ -6,5 +6,8 @@ query me {
         birthdate
         phone
         email
+        roles {
+            name
+        }
     }
 }

@@ -7,6 +7,7 @@ namespace App\GraphQL\Mutations;
 use DanielDeWit\LighthouseSanctum\Traits\CreatesUserProvider;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Config\Repository as Config;
+use Spatie\Permission\Models\Role;
 
 class UpdateUser
 {
@@ -27,8 +28,10 @@ class UpdateUser
     public function __invoke($_, array $args)
     {
         $userProvider = $this->createUserProvider();
-
         $user = $userProvider->retrieveById($args['id']);
+        if (isset($args['roles'])) {
+            $user->syncRoles($args['roles']);
+        }
         $user->fill($args)->save();
         return $user;
     }

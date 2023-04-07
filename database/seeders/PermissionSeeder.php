@@ -21,36 +21,49 @@ class PermissionSeeder extends Seeder
 
         $admin = Role::updateOrCreate(['id' => 1], ['name' => 'admin', 'guard_name' => 'sanctum']);
         $trainer = Role::updateOrCreate(['id' => 2], ['name' => 'trainer', 'guard_name' => 'sanctum']);
-        $player = Role::updateOrCreate(['id' => 3], ['name' => 'user', 'guard_name' => 'sanctum']);
+        $user = Role::updateOrCreate(['id' => 3], ['name' => 'user', 'guard_name' => 'sanctum']);
 
 
-        $user[] = Permission::updateOrCreate(['id' => 1], ['name' => 'edit-user']);
-        $user[] = Permission::updateOrCreate(['id' => 2], ['name' => 'view-user']);
+        $editUserPermission[] = Permission::updateOrCreate(['id' => 1], ['name' => 'edit-user']);
+        $userPermission[] = Permission::updateOrCreate(['id' => 2], ['name' => 'view-user']);
+
+        $userPermission[] = Permission::updateOrCreate(['id' => 3], ['name' => 'login']);
+
+        $rolePermission[] = Permission::updateOrCreate(['id' => 4], ['name' => 'edit-role']);
+        $rolePermission[] = Permission::updateOrCreate(['id' => 5], ['name' => 'view-role']);
+        $adminRolePermission[] = Permission::updateOrCreate(['id' => 6], ['name' => 'view-role-admin']);
+        $adminRolePermission[] = Permission::updateOrCreate(['id' => 7], ['name' => 'edit-role-admin']);
+        $trainerRolePermission[] = Permission::updateOrCreate(['id' => 8], ['name' => 'edit-role-trainer']);
+        $trainerRolePermission[] = Permission::updateOrCreate(['id' => 9], ['name' => 'view-role-trainer']);
+        $rolePermission[] = Permission::updateOrCreate(['id' => 10], ['name' => 'view-role-user']);
+
+        $editGroupPermission[] = Permission::updateOrCreate(['id' => 11], ['name' => 'edit-group']);
+        $groupPermission[] = Permission::updateOrCreate(['id' => 12], ['name' => 'view-group']);
 
 
-        $user[] = Permission::updateOrCreate(['id' => 3], ['name' => 'login']);
+        $this->sync($trainer, $trainerRolePermission);
+        $this->sync($trainer, $userPermission);
+        $this->sync($trainer, $editUserPermission);
+        $this->sync($trainer, $rolePermission);
+        $this->sync($trainer, $groupPermission);
+        $this->sync($trainer, $editGroupPermission);
 
-        $role[] = Permission::updateOrCreate(['id' => 4], ['name' => 'edit-role']);
-        $role[] = Permission::updateOrCreate(['id' => 5], ['name' => 'view-role']);
-        Permission::updateOrCreate(['id' => 6], ['name' => 'view-role-admin']);
-        $role[] = Permission::updateOrCreate(['id' => 7], ['name' => 'view-role-trainer']);
-        $role[] = Permission::updateOrCreate(['id' => 8], ['name' => 'view-role-user']);
+        $this->sync($admin, $adminRolePermission);
+        $this->sync($admin, $trainerRolePermission);
+        $this->sync($admin, $userPermission);
+        $this->sync($admin, $editUserPermission);
+        $this->sync($admin, $rolePermission);
+        $this->sync($admin, $groupPermission);
+        $this->sync($admin, $editGroupPermission);
 
-
-
-        /**
-         * Relacionando Permissões
-         */
-        $this->sync($trainer, $user);
-        $this->sync($trainer, $role);
-
-        $this->sync($admin, $user);
-        $this->sync($admin, $role);
-
-        $this->sync($player, $user);
-        $this->sync($player, $role);
+        $this->sync($user, $userPermission);
+        $this->sync($user, $groupPermission);
 
         User::whereEmail(env('MAIL_FROM_ADMIN'))->first()->assignRole('admin');
+        if (env('APP_DEBUG')) {
+            User::whereEmail(env('MAIL_FROM_TEST_TRAINER'))->first()->assignRole('trainer');
+            User::whereEmail(env('MAIL_FROM_TEST_USER'))->first()->assignRole('user');
+        }
 
     }
 

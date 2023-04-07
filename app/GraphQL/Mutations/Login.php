@@ -52,7 +52,7 @@ class Login
             throw new AuthenticationException('Die E-Mail Adresse ist nicht verifiziert.');
         }
 
-        if (!$user->approved) {
+        if (!$user->hasPermissionTo('login')) {
             throw new AuthenticationException('Du wurdest noch nicht freigeschaltet. Bitte informiere deinen Trainer');
         }
 

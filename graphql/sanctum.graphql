@@ -6,7 +6,7 @@ type User {
     birthdate: DateTime!
     phone: String
     email: String!
-    approved: Boolean!
+    roles: [Role!]! @belongsToMany
 }
 
 type AccessToken {

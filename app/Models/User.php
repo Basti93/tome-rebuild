@@ -10,11 +10,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\Contracts\HasApiTokens as HasApiTokensContract;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasApiTokensContract, MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Prunable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Prunable, HasRoles, LogsActivity;
     protected $guard_name = 'sanctum';
     /**
      * The attributes that are mass assignable.
@@ -29,8 +31,17 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         'phone',
         'email',
         'password',
-        'approved',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->dontLogIfAttributesChangedOnly(["password"]);
+        // Chain fluent methods for configuration options
+    }
 
     /**
      * The attributes that should be hidden for serialization.
