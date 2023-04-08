@@ -19,7 +19,6 @@ class GroupFactory extends Factory
     {
         return [
             'name' => $this->faker->name() . ' Gruppe',
-            'user_id' => User::first()->id,
         ];
     }
 }

@@ -32,6 +32,9 @@ class UpdateUser
         if (isset($args['roles'])) {
             $user->syncRoles($args['roles']);
         }
+        if (isset($args['groups'])) {
+            $user->groups()->sync($args['groups']);
+        }
         $user->fill($args)->save();
         return $user;
     }

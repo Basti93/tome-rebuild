@@ -62,6 +62,9 @@ class UserPolicy
                 return false;
             }
         }
+        if (isset($args['groups']) && !$user->hasPermissionTo('edit-group')) {
+            return false;
+        }
         return $user->hasPermissionTo('edit-user');
     }
 

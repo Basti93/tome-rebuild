@@ -71,17 +71,24 @@ export default {
         show: computed(() => showMenuItem(loggedIn, true, true))
       },
       {
-        icon: 'profile',
+        icon: 'account_circle',
         label: 'Profil',
         separator: false,
         to: "/profile",
         show: computed(() => showMenuItem(loggedIn, true, true))
       },
       {
-        icon: 'users',
+        icon: 'manage_accounts',
         label: 'Mitglieder',
         separator: false,
         to: "/users",
+        show: computed(() => showMenuItem(loggedIn, true, true))
+      },
+      {
+        icon: 'groups',
+        label: 'Gruppen',
+        separator: false,
+        to: "/groups",
         show: computed(() => showMenuItem(loggedIn, true, true))
       },
       {

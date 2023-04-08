@@ -1,4 +1,8 @@
-type Role {
+type Role @guard{
     id: ID!
     name: String
+}
+
+extend type Query @guard {
+    roles: [Role!]! @all @can(ability: "viewAny")
 }

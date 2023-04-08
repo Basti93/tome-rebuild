@@ -7,6 +7,7 @@ mutation updateUser (
     $birthdate: Date,
     $email: String,
     $roles: [ID!]
+    $groups: [ID!]
 ) {
     updateUser(id: $id, input: {
         firstname: $firstname,
@@ -16,6 +17,7 @@ mutation updateUser (
         phone: $phone,
         email: $email,
         roles: $roles,
+        groups: $groups,
     }) {
         id
         firstname
@@ -26,6 +28,10 @@ mutation updateUser (
         phone
         email
         roles {
+            id
+            name
+        }
+        groups {
             id
             name
         }

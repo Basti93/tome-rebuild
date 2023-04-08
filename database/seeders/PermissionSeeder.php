@@ -21,7 +21,7 @@ class PermissionSeeder extends Seeder
 
         $admin = Role::updateOrCreate(['id' => 1], ['name' => 'admin', 'guard_name' => 'sanctum']);
         $trainer = Role::updateOrCreate(['id' => 2], ['name' => 'trainer', 'guard_name' => 'sanctum']);
-        $user = Role::updateOrCreate(['id' => 3], ['name' => 'user', 'guard_name' => 'sanctum']);
+        $athlete = Role::updateOrCreate(['id' => 3], ['name' => 'athlete', 'guard_name' => 'sanctum']);
 
 
         $editUserPermission[] = Permission::updateOrCreate(['id' => 1], ['name' => 'edit-user']);
@@ -56,13 +56,13 @@ class PermissionSeeder extends Seeder
         $this->sync($admin, $groupPermission);
         $this->sync($admin, $editGroupPermission);
 
-        $this->sync($user, $userPermission);
-        $this->sync($user, $groupPermission);
+        $this->sync($athlete, $userPermission);
+        $this->sync($athlete, $groupPermission);
 
         User::whereEmail(env('MAIL_FROM_ADMIN'))->first()->assignRole('admin');
         if (env('APP_DEBUG')) {
             User::whereEmail(env('MAIL_FROM_TEST_TRAINER'))->first()->assignRole('trainer');
-            User::whereEmail(env('MAIL_FROM_TEST_USER'))->first()->assignRole('user');
+            User::whereEmail(env('MAIL_FROM_TEST_USER'))->first()->assignRole('athlete');
         }
 
     }

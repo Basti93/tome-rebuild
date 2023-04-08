@@ -1,0 +1,10 @@
+mutation createGroup (
+    $name: String!,
+) {
+    createGroup(input: {
+        name: $name,
+    }) {
+        id
+        name
+    }
+}

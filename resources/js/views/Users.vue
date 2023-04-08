@@ -1,7 +1,6 @@
 <template>
-  <q-page class="full-height full-width row justify-center items-center">
-    <div class="column">
-      <div class="row q-pt-md">
+  <q-page>
+      <div class="row full-height full-width q-pa-md">
         <q-table
             ref="tableRef"
             title="Users"
@@ -12,8 +11,10 @@
             v-model:pagination="pagination"
             :loading="loading"
             :filter="filter"
-            binary-state-sort
+            wrap-cells
             @request="onRequest"
+            dense
+            binary-state-sort
         >
           <template v-slot:top>
                 <div class="row full-width">
@@ -21,18 +22,18 @@
                         <p class="text-h4">Mitglieder</p>
                         <p class="text-subtitle-1">Zum Editieren auf die Zeilen klicken</p>
                     </div>
-                    <div class="col col-auto no-wrap self-center">
+                    <div class="col self-center">
                         <div class="row">
                           <q-select
                                   class="col"
-                                  v-model="filterCols"
+                                  v-model="filterCol"
                                   @update:model-value="tableRef.requestServerInteraction()"
                                   dense
                                   outlined
                                   options-dense
                                   emit-value
                                   map-options
-                                  :options="columns.filter(c => c.name === 'firstname' || c.name === 'nickname' || c.name === 'lastname' || c.name === 'hasRole')"
+                                  :options="columns.filter(c => c.name === 'firstname' || c.name === 'nickname' || c.name === 'lastname')"
                                   option-value="name"
                                   label="Spalte zum Suchen"
                           ></q-select>
@@ -44,18 +45,40 @@
                         </div>
                     </div>
                 </div>
-                <div class="row full-width justify-end">
+              <q-card flat bordered class="q-pa-sm full-width">
+                <div class="row">
+                    <div class="col-12 q-pt-md">
+                      <q-btn-toggle
+                              v-model="approvedToggle"
+                              @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
+                              :options="[
+                                { label: 'Alle', value: 'all' },
+                                { label: 'Freigeschaltet', value: 'approved' },
+                                { label: 'Nicht freigeschaltet', value: 'notApproved' }
+                              ]"
+                              toggle-color="primary"
+                              rounded />
+                      </div>
+                    <div class="col-12 q-pt-md">
                         <q-btn-toggle
-                            v-model="approvedToggle"
-                            @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
-                            :options="[
-                              { label: 'Alle', value: 'all' },
-                              { label: 'Freigeschaltet', value: 'approved' },
-                              { label: 'Nicht freigeschaltet', value: 'notApproved' }
-                            ]"
-                            toggle-color="primary"
-                            dense rounded />
+                                v-model="roleToggle"
+                                @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
+                                :options="roleToggleOptions"
+                                toggle-color="primary"
+                                rounded >
+                        </q-btn-toggle>
+                    </div>
+                    <div class="col-12 col-lg-4 q-pt-md">
+                        <q-select
+                                width="100%"
+                                label="Gruppe"
+                                v-model="groupToggle"
+                                @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
+                                :options="groupToggleOptions">
+                        </q-select>
+                    </div>
                 </div>
+              </q-card>
           </template>
 
           <template v-slot:body="props">
@@ -138,13 +161,31 @@
                 </q-popup-edit>
               </q-td>
               <q-td key="approved" :props="props">
-                <q-btn v-if="props.row.approved" @click="removeUserRole(props.row)" size="xs" outline round icon="check" color="green" />
-                <q-btn v-if="!props.row.approved" @click="addUserRole(props.row)" size="xs" outline round icon="clear" color="red" />
+                <q-btn v-if="props.row.approved" :disable="props.row.roles.some(r => ['admin', 'trainer'].includes(r.name))" @click="removeAthleteRole(props.row)" size="xs" outline round icon="check" color="green" />
+                <q-btn v-if="!props.row.approved" @click="addAthleteRole(props.row)" size="xs" outline round icon="clear" color="red" />
               </q-td>
 
+              <q-td key="groups" :props="props">
+                  {{ props.row.groups.map(g => g.name).toString() }}
+                  <q-popup-edit :model-value="props.row.groups" v-slot="scope" @save="(value) => updateUser(props.row.id, 'groups', value.map(g => g.id))">
+                      <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="groups" option-value="id" option-label="name">
+                          <template v-slot:after>
+                              <q-btn
+                                      flat dense color="negative" icon="cancel"
+                                      @click.stop.prevent="scope.cancel"
+                              />
+
+                              <q-btn
+                                      flat dense color="positive" icon="check_circle"
+                                      @click.stop.prevent="scope.set"
+                              />
+                          </template>
+                      </q-select>
+                  </q-popup-edit>
+              </q-td>
               <q-td key="hasRole" :props="props">
                   {{ props.row.roles.map(r => r.name).toString() }}
-                  <q-popup-edit @before-show="loadRoles()" :model-value="props.row.roles" v-slot="scope" @save="(value) => updateUser(props.row.id, 'roles', value.map(r => r.id))">
+                  <q-popup-edit :model-value="props.row.roles" v-slot="scope" @save="(value) => updateUser(props.row.id, 'roles', value.map(r => r.id))">
                       <q-select v-model="scope.value" multiple dense autofocus @keyup.enter="scope.set" :options="roles" option-value="id" option-label="name">
                           <template v-slot:after>
                               <q-btn
@@ -175,13 +216,13 @@
 
         </q-table>
       </div>
-    </div>
   </q-page>
 </template>
 <script>
 
 import usersPaginationQuery from "../queries/userpagination.query.gql";
 import rolesQuery from "../queries/roles.query.gql";
+import groupsQuery from "../queries/groups.query.gql";
 import deleteUsersMutation from "../queries/userdelete.mutation.gql";
 import updateUsersMutation from "../queries/userupdate.mutation.gql";
 import {computed, onMounted, ref} from "vue";
@@ -189,7 +230,7 @@ import apolloClient from "../apollo";
 import {date} from 'quasar'
 import { useQuasar } from 'quasar'
 import {useStore} from "vuex";
-import {useLazyQuery} from "@vue/apollo-composable";
+import {useLazyQuery, useQuery} from "@vue/apollo-composable";
 
 
 export default {
@@ -204,8 +245,9 @@ export default {
     const tableRef = ref()
     const filter = ref('')
     const filterCol = ref('firstname')
-    const firstnameEdit = ref('');
-    const approvedToggle = ref('all');
+    const approvedToggle = ref('approved');
+    const roleToggle = ref('3');
+    const groupToggle = ref({value: 'all', label: 'Alle'});
     const rows = ref([])
     const loading = ref(false)
     const me = computed(() => store.state.auth.user)
@@ -223,11 +265,40 @@ export default {
       {name: 'lastname', align: 'center', label: 'Nachname', field: 'lastname', sortable: true},
       {name: 'birthdate', align: 'center', label: 'Geburtsdatum', field: 'birthdate', sortable: true,},
       {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: false,},
+      {name: 'groups', align: 'center', label: 'Gruppen', field: 'groups', sortable: false,},
       {name: 'hasRole', align: 'center', label: 'Rollen', field: 'roles', sortable: false,},
       {name: 'actions', align: 'center', label: 'Aktionen', field: '', sortable: false,},
     ]
-    const {result: rolesResult, load: loadRoles} = useLazyQuery(rolesQuery);
+    const {result: rolesResult} = useQuery(rolesQuery);
+    const {result: groupsResult} = useQuery(groupsQuery);
     const roles = computed(() => rolesResult.value?.roles ?? [])
+    const roleToggleOptions = computed(() => {
+        const options = [...roles.value.map(r => {
+            return {
+                label: r.name,
+                value: r.id
+            }
+        })];
+        options.unshift({
+            label: 'Alle',
+            value: 'all'
+        })
+      return options
+    })
+    const groupToggleOptions = computed(() => {
+        const options = [...groups.value.map(g => {
+            return {
+                label: g.name,
+                value: g.id
+            }
+        })];
+        options.unshift({
+            label: 'Alle',
+            value: 'all'
+        })
+      return options
+    })
+    const groups = computed(() => groupsResult.value?.groups ?? [])
 
     const onRequest = (props) => {
       loading.value = true
@@ -237,25 +308,31 @@ export default {
       const variables = ref({
         first: rowsPerPage,
         page: page,
-        orderBy: [
-            {
-                column: sortBy.toUpperCase(),
-                order: descending ? 'DESC' : 'ASC',
-            }
-        ]
       });
+      if (sortBy) {
+        variables.value.orderBy = [
+          {
+            column: sortBy.toUpperCase(),
+            order: descending ? 'DESC' : 'ASC',
+          }
+        ]
+      }
       if (filter) {
-          if (filterCol.value === 'hasRole') {
-              variables.value[`${filterCol.value}`] = {
-                  column: 'NAME',
-                  operator: 'LIKE',
-                  value: filter
-              }
-          } else {
-              variables.value[`${filterCol.value}`] = "%" + filter + "%";
+          variables.value[`${filterCol.value}`] = "%" + filter + "%";
+      }
+      if (roleToggle.value != 'all') {
+          variables.value[`hasRole`] = {
+              column: 'ID',
+              value: roleToggle.value
           }
       }
-      if (approvedToggle.value != 'all') {
+      if (groupToggle.value.value !== 'all') {
+          variables.value[`hasGroup`] = {
+              column: 'ID',
+              value: groupToggle.value.value
+          }
+      }
+      if (approvedToggle.value !== 'all') {
           variables.value['approved'] = approvedToggle.value == 'approved';
       }
 
@@ -338,9 +415,9 @@ export default {
       })
     }
 
-    const addUserRole = (user) => {
+    const addAthleteRole = (user) => {
         loading.value = true;
-        const existingRoles = user.roles.map(role => role.id);
+        const existingRoles = [...user.roles].map(role => role.id);
         existingRoles.push(3);
         apolloClient.mutate({
             mutation: updateUsersMutation,
@@ -362,11 +439,16 @@ export default {
         })
 
     }
-    const removeUserRole = (user) => {
+    const removeAthleteRole = (user) => {
         loading.value = true;
+        const existingRoles = [...user.roles].map(role => role.id);
+        const index = existingRoles.indexOf("3");
+        if (index > -1) {
+            existingRoles.splice(index, 1);
+        }
         apolloClient.mutate({
             mutation: updateUsersMutation,
-            variables: {id: user.id, 'roles': user.roles.map(r => r.id).filter(id => id !== "3")}
+            variables: {id: user.id, 'roles': existingRoles}
         }).then(({data}) => {
             $q.notify({
                 message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
@@ -396,6 +478,8 @@ export default {
       filter,
       tableRef,
       approvedToggle,
+      roleToggle,
+      groupToggle,
       loading,
       onRequest,
       pagination,
@@ -403,13 +487,14 @@ export default {
       deleteUser,
       confirmDelete,
       updateUser,
-      removeUserRole,
-      addUserRole,
+      removeAthleteRole,
+      addAthleteRole,
       me,
-      filterCols: filterCol,
-      firstnameEdit,
+      filterCol,
       roles,
-      loadRoles
+      roleToggleOptions,
+      groupToggleOptions,
+      groups,
     }
   },
 }

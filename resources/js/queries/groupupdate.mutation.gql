@@ -1,0 +1,11 @@
+mutation updateGroup (
+    $id: ID!,
+    $name: String,
+) {
+    updateGroup(id: $id, input: {
+        name: $name,
+    }) {
+        id
+        name
+    }
+}

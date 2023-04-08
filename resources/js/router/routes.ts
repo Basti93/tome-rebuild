@@ -24,6 +24,11 @@ export default [
                 component: () => import("@/views/Users.vue"),
             },
             {
+                path: "/groups",
+                name: "Groups",
+                component: () => import("@/views/Groups.vue"),
+            },
+            {
                 path: "/profile",
                 name: "Profile",
                 component: () => import("@/views/Profile.vue"),

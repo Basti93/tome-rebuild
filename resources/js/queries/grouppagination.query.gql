@@ -1,0 +1,17 @@
+query getGroupPagination ($first: Int!, $page: Int!, $orderBy: [QueryGroupsPaginateOrderByOrderByClause!], $name: String) {
+    groupsPaginate(first: $first, page: $page, orderBy: $orderBy, name: $name) {
+        paginatorInfo {
+            total
+            currentPage
+            hasMorePages
+            lastItem
+            lastPage
+            perPage
+            count
+        }
+        data {
+            id
+            name
+        }
+    }
+}
