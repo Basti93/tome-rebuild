@@ -16,16 +16,46 @@
             @request="onRequest"
         >
           <template v-slot:top>
-              <div>
-              <p class="text-h4">Mitglieder</p>
-              <p class="text-subtitle-1">Zum Editieren auf die Zeilen klicken</p>
-              </div>
-            <q-space />
-            <q-input filled dense debounce="300" color="primary" v-model="filter">
-              <template v-slot:append>
-                <q-icon name="search" />
-              </template>
-            </q-input>
+                <div class="row full-width">
+                    <div class="col">
+                        <p class="text-h4">Mitglieder</p>
+                        <p class="text-subtitle-1">Zum Editieren auf die Zeilen klicken</p>
+                    </div>
+                    <div class="col col-auto no-wrap self-center">
+                        <div class="row">
+                          <q-select
+                                  class="col"
+                                  v-model="filterCols"
+                                  @update:model-value="tableRef.requestServerInteraction()"
+                                  dense
+                                  outlined
+                                  options-dense
+                                  emit-value
+                                  map-options
+                                  :options="columns.filter(c => c.name === 'firstname' || c.name === 'nickname' || c.name === 'lastname' || c.name === 'hasRole')"
+                                  option-value="name"
+                                  label="Spalte zum Suchen"
+                          ></q-select>
+                          <q-input class="col q-pl-md" label="Suche" filled dense debounce="300" color="primary" v-model="filter">
+                              <template v-slot:append>
+                                  <q-icon name="search" />
+                              </template>
+                          </q-input>
+                        </div>
+                    </div>
+                </div>
+                <div class="row full-width justify-end">
+                        <q-btn-toggle
+                            v-model="approvedToggle"
+                            @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
+                            :options="[
+                              { label: 'Alle', value: 'all' },
+                              { label: 'Freigeschaltet', value: 'approved' },
+                              { label: 'Nicht freigeschaltet', value: 'notApproved' }
+                            ]"
+                            toggle-color="primary"
+                            dense rounded />
+                </div>
           </template>
 
           <template v-slot:body="props">
@@ -108,11 +138,11 @@
                 </q-popup-edit>
               </q-td>
               <q-td key="approved" :props="props">
-                <q-btn v-if="props.row.roles.length > 0" @click="removeUserRole(props.row)" size="xs" outline round icon="check" color="green" />
-                <q-btn v-if="props.row.roles.length === 0" @click="addUserRole(props.row)" size="xs" outline round icon="clear" color="red" />
+                <q-btn v-if="props.row.approved" @click="removeUserRole(props.row)" size="xs" outline round icon="check" color="green" />
+                <q-btn v-if="!props.row.approved" @click="addUserRole(props.row)" size="xs" outline round icon="clear" color="red" />
               </q-td>
 
-              <q-td key="roles" :props="props">
+              <q-td key="hasRole" :props="props">
                   {{ props.row.roles.map(r => r.name).toString() }}
                   <q-popup-edit @before-show="loadRoles()" :model-value="props.row.roles" v-slot="scope" @save="(value) => updateUser(props.row.id, 'roles', value.map(r => r.id))">
                       <q-select v-model="scope.value" multiple dense autofocus @keyup.enter="scope.set" :options="roles" option-value="id" option-label="name">
@@ -173,7 +203,9 @@ export default {
     const store = useStore();
     const tableRef = ref()
     const filter = ref('')
+    const filterCol = ref('firstname')
     const firstnameEdit = ref('');
+    const approvedToggle = ref('all');
     const rows = ref([])
     const loading = ref(false)
     const me = computed(() => store.state.auth.user)
@@ -190,8 +222,8 @@ export default {
       {name: 'firstname', align: 'center', label: 'Vorname', field: 'firstname', sortable: true},
       {name: 'lastname', align: 'center', label: 'Nachname', field: 'lastname', sortable: true},
       {name: 'birthdate', align: 'center', label: 'Geburtsdatum', field: 'birthdate', sortable: true,},
-      {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: true,},
-      {name: 'roles', align: 'center', label: 'Rollen', field: 'roles', sortable: false,},
+      {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: false,},
+      {name: 'hasRole', align: 'center', label: 'Rollen', field: 'roles', sortable: false,},
       {name: 'actions', align: 'center', label: 'Aktionen', field: '', sortable: false,},
     ]
     const {result: rolesResult, load: loadRoles} = useLazyQuery(rolesQuery);
@@ -206,14 +238,25 @@ export default {
         first: rowsPerPage,
         page: page,
         orderBy: [
-          {
-            column: sortBy.toUpperCase(),
-            order: descending ? 'DESC' : 'ASC',
-          }
-        ],
+            {
+                column: sortBy.toUpperCase(),
+                order: descending ? 'DESC' : 'ASC',
+            }
+        ]
       });
       if (filter) {
-        variables.value.filter =  "%" + filter + "%";
+          if (filterCol.value === 'hasRole') {
+              variables.value[`${filterCol.value}`] = {
+                  column: 'NAME',
+                  operator: 'LIKE',
+                  value: filter
+              }
+          } else {
+              variables.value[`${filterCol.value}`] = "%" + filter + "%";
+          }
+      }
+      if (approvedToggle.value != 'all') {
+          variables.value['approved'] = approvedToggle.value == 'approved';
       }
 
       apolloClient.query({
@@ -352,6 +395,7 @@ export default {
       rows,
       filter,
       tableRef,
+      approvedToggle,
       loading,
       onRequest,
       pagination,
@@ -359,9 +403,10 @@ export default {
       deleteUser,
       confirmDelete,
       updateUser,
-        removeUserRole,
-        addUserRole,
+      removeUserRole,
+      addUserRole,
       me,
+      filterCols: filterCol,
       firstnameEdit,
       roles,
       loadRoles

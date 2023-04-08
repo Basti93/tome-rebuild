@@ -6,7 +6,7 @@ import { DefaultApolloClient } from '@vue/apollo-composable'
 import apolloClient from "./apollo";
 
 //Quasar
-import { Quasar, Notify, Dialog } from 'quasar'
+import {Quasar, Notify, Dialog, Dark} from 'quasar'
 import quasarLang from 'quasar/lang/de'
 
 // Import icon libraries
@@ -22,6 +22,6 @@ createApp({
     },
     render: () => h(App),
 }).use(router).use(store).use(Quasar, {
-    plugins: {Notify, Dialog}, // import Quasar plugins and add here
+    plugins: {Notify, Dialog, Dark}, // import Quasar plugins and add here
     lang: quasarLang,
 }).mount('#app')

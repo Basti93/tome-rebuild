@@ -4,9 +4,11 @@ type User {
     firstname: String!
     lastname: String!
     birthdate: DateTime!
+    created_at: DateTime!
     phone: String
     email: String!
     roles: [Role!]! @belongsToMany
+    approved: Boolean!
 }
 
 type AccessToken {

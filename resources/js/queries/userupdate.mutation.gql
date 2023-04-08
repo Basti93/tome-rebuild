@@ -22,11 +22,13 @@ mutation updateUser (
         lastname
         nickname
         birthdate
+        created_at
         phone
         email
         roles {
             id
             name
         }
+        approved
     }
 }

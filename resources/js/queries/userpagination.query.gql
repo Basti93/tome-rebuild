@@ -1,5 +1,5 @@
-query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderByOrderByClause!], $filter: String) {
-    users(first: $first, page: $page, orderBy: $orderBy, firstname: $filter) {
+query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderByOrderByClause!], $firstname: String, $lastname: String, $nickname: String, $hasRole: QueryUsersHasRoleWhereHasConditions, $approved: Boolean) {
+    users(first: $first, page: $page, orderBy: $orderBy, firstname: $firstname, lastname: $lastname, nickname: $nickname, hasRole: $hasRole, approved: $approved) {
         paginatorInfo {
             total
             currentPage
@@ -14,6 +14,7 @@ query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderB
             firstname
             lastname
             birthdate
+            created_at
             nickname
             phone
             email
@@ -21,6 +22,7 @@ query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersOrderB
                 id
                 name
             }
+            approved
         }
     }
 }

@@ -3,15 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Contracts\HasApiTokens as HasApiTokensContract;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasApiTokensContract, MustVerifyEmail
@@ -32,6 +35,8 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         'email',
         'password',
     ];
+
+    protected $appends = ['approved'];
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -62,6 +67,32 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         'email_verified_at' => 'datetime',
         'birthdate' => 'datetime',
     ];
+
+    public function getApprovedAttribute(): bool
+    {
+        return $this->can('login');
+    }
+
+    public function scopeApproved(Builder $query, bool $approved): Builder
+    {
+        $scopeQuery = function ($query) use ($approved) {
+            $query->select('users.id')
+                ->from('users')
+                ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->join('role_has_permissions', 'roles.id', '=', 'role_has_permissions.role_id')
+                ->join('permissions', 'role_has_permissions.permission_id', '=', 'permissions.id')
+                ->where('permissions.name', ($approved ? '=' : '!='), 'login')
+                ->where('model_has_roles.model_type', 'App\\Models\\User')
+                ->groupBy('users.id');
+
+        };
+        if ($approved) {
+            return $query->whereIn('id', $scopeQuery);
+        } else {
+            return $query->whereNotIn('id', $scopeQuery);
+        }
+    }
 
     public function prunable()
     {

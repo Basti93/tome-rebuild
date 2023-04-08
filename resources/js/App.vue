@@ -52,9 +52,11 @@
 
 import {useStore} from "vuex";
 import {computed, reactive, ref} from "vue";
+import {useQuasar} from "quasar";
 
 export default {
   setup() {
+    const $q = useQuasar()
     const leftDrawerOpen = ref(false)
     const appName = import.meta.env.VITE_APP_NAME
     const store = useStore();
@@ -111,6 +113,8 @@ export default {
         show: computed(() => showMenuItem(loggedIn, true, true))
       },
     ])
+
+    $q.dark.set('auto')
 
     store.dispatch('auth/fetchAccessToken');
     store.dispatch('auth/getMe');
