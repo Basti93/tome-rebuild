@@ -229,19 +229,12 @@ import {computed, onMounted, ref} from "vue";
 import apolloClient from "../apollo";
 import {date} from 'quasar'
 import { useQuasar } from 'quasar'
-import {useStore} from "vuex";
-import {useLazyQuery, useQuery} from "@vue/apollo-composable";
+import {useQuery} from "@vue/apollo-composable";
 
 
 export default {
-  computed: {
-    date() {
-      return date
-    }
-  },
   setup() {
     const $q = useQuasar()
-    const store = useStore();
     const tableRef = ref()
     const filter = ref('')
     const filterCol = ref('firstname')
@@ -250,7 +243,6 @@ export default {
     const groupToggle = ref({value: 'all', label: 'Alle'});
     const rows = ref([])
     const loading = ref(false)
-    const me = computed(() => store.state.auth.user)
     const pagination = ref({
       sortBy: 'id',
       descending: true,
@@ -489,12 +481,12 @@ export default {
       updateUser,
       removeAthleteRole,
       addAthleteRole,
-      me,
       filterCol,
       roles,
       roleToggleOptions,
       groupToggleOptions,
       groups,
+      date,
     }
   },
 }

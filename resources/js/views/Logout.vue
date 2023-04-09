@@ -3,18 +3,33 @@
 </template>
 <script >
 
-import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import {onMounted} from "vue";
+import apolloClient from "../apollo";
+import logoutMutation from "../queries/logout.mutation.gql";
+import {useQuasar} from "quasar";
 
 
 export default {
-  setup() {
-    const store = useStore();
+  emits: ["logout"],
+  setup(props, { emit }) {
+    const $q = useQuasar();
     const router = useRouter();
     onMounted(() => {
-      store.dispatch('auth/doLogout');
-      router.push("/home")
+        apolloClient.mutate({
+            mutation: logoutMutation
+        }).then(() => {
+            localStorage.removeItem('accessToken');
+            $q.notify({
+                message: 'Erfolgreich ausgeloggt!',
+                color: 'positive'})
+            emit('logout');
+            router.push("/login")
+        }).catch(() => {
+            $q.notify({
+                message: 'Fehler beim Logout!',
+                color: 'negative'})
+        })
     })
 
 

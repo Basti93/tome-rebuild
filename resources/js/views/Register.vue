@@ -11,7 +11,6 @@
               <q-input
                   type="text"
                   v-model="firstname"
-                  lazy-rules
                   label="Vorname*"
                   :rules="[ val => val && val.length > 0 || 'Vorname darf nicht leer sein']"
               ></q-input>
@@ -26,17 +25,31 @@
                   v-model="nickname"
                   label="Spitzname"
               ></q-input>
-              <q-input
-                  type="date"
-                  mask="date"
-                  v-model="birthdate"
-                  label="Geburtsdatum*"
-                  :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein']"
-              ></q-input>
+                <q-input
+                        label="Geburtsdatum*"
+                        v-model="formattedBirthdate"
+                        :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein']">
+                    <template v-slot:append>
+                        <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy
+                                    ref="proxyBirthdate"
+                                    transition-show="scale"
+                                    transition-hide="scale">
+                                <q-date
+                                        minimal
+                                        v-model="formattedBirthdate"
+                                        @update:model-value="$refs.proxyBirthdate.hide()"
+                                        mask="DD.MM.YYYY"
+                                        >
+                                </q-date>
+                            </q-popup-proxy>
+                        </q-icon>
+                    </template>
+                </q-input>
               <q-input
                   type="tel"
                   v-model="phone"
-                  hint="Nummer der Eltern für Notfälle"
+                  hint="Bei Kindern bitte die Nummer der Eltern für Notfälle"
                   label="Telefonummer"
               ></q-input>
               <q-input
@@ -76,7 +89,8 @@
 <script lang="ts">
 import {useMutation} from "@vue/apollo-composable";
 import registerMutation from "../queries/register.mutation.gql"
-import {ref} from 'vue'
+import {computed, ref} from 'vue'
+import {date} from "quasar";
 
 export default {
   setup() {
@@ -84,13 +98,21 @@ export default {
     const firstname = ref('')
     const lastname = ref('')
     const nickname = ref('')
-    const birthdate = ref('')
+    const birthdate = ref(date.formatDate(date.buildDate({year: 2000, month: 1, day: 1}), 'YYYY-DD-MM'));
     const phone = ref('')
     const email = ref('')
     const password = ref('')
     const password_confirmation = ref('')
     const validationErrors = ref('')
     const registerDone = ref(false);
+    const formattedBirthdate = computed({
+        get() {
+            return date.formatDate(birthdate.value, 'DD.MM.YYYY');
+        },
+        set(value) {
+            birthdate.value = date.formatDate(date.extractDate(value, 'DD.MM.YYYY'),'YYYY-MM-DD');
+        }
+    });
     const {
       mutate: register,
       onDone,
@@ -135,7 +157,7 @@ export default {
       lastname,
       phone,
       nickname,
-      birthdate,
+      formattedBirthdate,
       email,
       password,
       password_confirmation,

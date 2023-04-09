@@ -11,8 +11,7 @@
           {{ appName }}
         </q-toolbar-title>
 
-        <q-btn flat :label="me.nickname ? me.nickname : me.firstname" v-if="me">
-
+        <q-btn v-show="loggedIn" :label="me.nickname ? me.nickname : me.firstname" flat>
           <q-avatar size="26px">
             <img src="https://cdn.quasar.dev/img/boy-avatar.png">
           </q-avatar>
@@ -42,7 +41,7 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view/>
+      <router-view @login="updateLoginState" @logout="updateLoginState" @userUpdated="updateLoginState"/>
     </q-page-container>
 
   </q-layout>
@@ -50,18 +49,18 @@
 <script>
 
 
-import {useStore} from "vuex";
 import {computed, reactive, ref} from "vue";
 import {useQuasar} from "quasar";
+import apolloClient from "./apollo";
+import meQuery from "./queries/me.query.gql";
 
 export default {
   setup() {
     const $q = useQuasar()
     const leftDrawerOpen = ref(false)
     const appName = import.meta.env.VITE_APP_NAME
-    const store = useStore();
-    const me = computed(() => store.state.auth.user)
-    const loggedIn = computed(() => store.state.auth.accessToken && store.state.auth.accessToken.length > 0);
+    const me = ref({})
+    const loggedIn = ref(false)
     const menuList = reactive([
       {
         icon: 'home',
@@ -123,8 +122,24 @@ export default {
 
     $q.dark.set('auto')
 
-    store.dispatch('auth/fetchAccessToken');
-    store.dispatch('auth/getMe');
+
+
+    const updateLoginState = () => {
+        loggedIn.value = localStorage.getItem('accessToken') !== null;
+        if (loggedIn.value) {
+            apolloClient.query({query: meQuery}).then(({data}) => {
+                me.value = data.me;
+            }).catch(() => {
+                $q.notify({
+                    type: 'negative',
+                    message: 'Fehler beim Laden des Benutzers'
+                })
+            })
+        } else {
+            me.value = {};
+        }
+    }
+    updateLoginState();
 
     function showMenuItem(isLoggedIn, authNeeded, showLoggedIn) {
       if (isLoggedIn.value && showLoggedIn) {
@@ -141,6 +156,7 @@ export default {
       appName,
       me,
       loggedIn,
+      updateLoginState,
       toggleLeftDrawer() {
         leftDrawerOpen.value = !leftDrawerOpen.value
       }

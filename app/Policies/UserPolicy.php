@@ -43,6 +43,14 @@ class UserPolicy
         return $user->hasPermissionTo('edit-user');
     }
 
+    public function updateMe(User $user, User $model): bool
+    {
+        if ($user->id != $model->id) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Determine whether the user can update the model.
      */

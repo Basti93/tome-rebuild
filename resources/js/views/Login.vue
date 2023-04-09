@@ -18,15 +18,14 @@
                     :rules="[ val => val && val.length > 0 || 'Passwort darf nicht leer sein']"
                     type="password"
                     label="Passwort"/>
-                <div>{{loginError}}</div>
-                <div v-show="loggingIn">Login...</div>
+                <div class="text-red" v-if="validationErrors">{{validationErrors}}</div>
             </q-card-section>
             <q-card-actions class="q-px-md">
               <q-btn type="submit" unelevated size="lg" class="full-width" label="Login" color="light-blue-7"/>
             </q-card-actions>
             <q-card-section class="text-center q-pa-none">
               <p><router-link to="/register" class="text-grey-6">Noch nicht registriert? Account erstellen</router-link></p>
-              <p><router-link to="/forgotPassword" class="text-grey-6">Passwort vergessen? Passwort zurücksetzen</router-link></p>
+              <p><router-link to="/forgot-password" class="text-grey-6">Passwort vergessen? Passwort zurücksetzen</router-link></p>
             </q-card-section>
           </q-form>
         </q-card>
@@ -35,38 +34,54 @@
   </q-page>
 </template>
 <script>
-import {useStore} from 'vuex'
-import {useRouter} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import {computed, ref} from "vue"
+import apolloClient from "../apollo";
+import loginMutation from "../queries/login.mutation.gql";
+import {useQuasar} from "quasar";
 
 export default {
-  setup() {
+  emits: ["login"],
+  setup(props, { emit }) {
     const email = ref('')
     const password = ref('')
-    const store = useStore()
     const router = useRouter()
-    const loginError = computed(() => store.state.auth.loginError);
-    const loggingIn = computed(() => store.state.auth.loggingIn);
-    const accessToken = computed(() => store.state.auth.accessToken);
+    const route = useRoute()
+    const validationErrors = ref('')
+    const $q = useQuasar();
+    const accessToken = computed(() => localStorage.getItem('accessToken'))
 
-    if (accessToken) {
+      if (accessToken) {
       router.push("/home");
     }
 
     function handleLogin() {
-      store.dispatch("auth/doLogin", {email: email.value, password: password.value});
+        validationErrors.value = '';
+        apolloClient.mutate({
+            mutation: loginMutation,
+            variables: {email: email.value, password: password.value},
+        }).then(({data}) => {
+            localStorage.setItem('accessToken', data.login.token);
+            $q.notify({
+                message: 'Erfolgreich eingeloggt!',
+                color: 'positive'})
+            emit('login');
+            router.push(route.query.redirect || "/home")
+        }).catch(({ graphQLErrors }) => {
+            validationErrors.value = graphQLErrors[0].message;
+            $q.notify({
+                message: 'Fehler beim Login!',
+                color: 'negative'})
+            localStorage.removeItem('accessToken');
+        });
     }
-
-
-
 
     return {
       email,
       password,
-      loggingIn,
-      loginError,
       accessToken,
-      handleLogin
+      handleLogin,
+      validationErrors,
     }
   }
 }

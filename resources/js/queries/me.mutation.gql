@@ -1,0 +1,27 @@
+mutation updateMe (
+    $id: ID!,
+    $firstname: String!,
+    $lastname: String!,
+    $nickname: String,
+    $phone: String,
+    $birthdate: Date!,
+    $email: String!,
+) {
+    updateMe(input: {
+        id: $id,
+        firstname: $firstname,
+        lastname: $lastname,
+        nickname: $nickname,
+        email: $email,
+        birthdate: $birthdate,
+        phone: $phone,
+    }) {
+        id
+        firstname
+        lastname
+        nickname
+        birthdate
+        phone
+        email
+    }
+}

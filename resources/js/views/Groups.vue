@@ -101,31 +101,23 @@ import groupsPaginationQuery from "../queries/grouppagination.query.gql";
 import deleteGroupMutation from "../queries/groupdelete.mutation.gql";
 import createGroupMutation from "../queries/groupcreate.mutation.gql";
 import updateGroupsMutation from "../queries/groupupdate.mutation.gql";
-import {computed, onMounted, ref} from "vue";
+import { onMounted, ref} from "vue";
 import apolloClient from "../apollo";
 import {date} from 'quasar'
 import { useQuasar } from 'quasar'
-import {useStore} from "vuex";
 
 
 export default {
-  computed: {
-    date() {
-      return date
-    }
-  },
   setup() {
     const $q = useQuasar()
-    const store = useStore();
     const tableRef = ref()
     const filter = ref('')
-    const filterCol = ref('firstname')
+    const filterCol = ref('name')
     const editName = ref('');
     const approvedToggle = ref('all');
     const rows = ref([])
     const loading = ref(false)
     const showNewGroupDialog = ref(false)
-    const me = computed(() => store.state.auth.group)
     const pagination = ref({
       sortBy: 'id',
       descending: true,
@@ -286,9 +278,9 @@ export default {
       deleteGroup,
       confirmDelete,
       updateGroup,
-      me,
-      filterCols: filterCol,
+      filterCol,
       editName,
+      date,
     }
   },
 }

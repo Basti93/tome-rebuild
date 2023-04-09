@@ -14,7 +14,7 @@ router.beforeEach(async (to, from) => {
         localStorage.getItem('accessToken') == null && to.name !== 'Login' && to.name !== 'Register' && to.name !== 'VerifyEmail' && to.name !== 'ForgotPassword' && to.name !== 'ResetPassword'
     ) {
         // redirect the user to the login page
-        return { name: 'Login' }
+        return { name: 'Login', query: { redirect: to.path} }
     }
 })
 

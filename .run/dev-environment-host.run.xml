@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="dev-environment-host" type="CompoundRunConfigurationType">
+    <toRun name="run dev host" type="js.build_tools.npm" />
+    <toRun name="serve host" type="PhpLocalRunConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

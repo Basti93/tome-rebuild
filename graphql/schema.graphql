@@ -17,6 +17,16 @@ input UserInput {
     groups: [ID!] @rules(apply: ["exists:groups,id"])
 }
 
+input UpdateMeInput @validator(class: "App\\GraphQL\\Validators\\UpdateMeInputValidator"){
+    id: ID!
+    firstname: String!
+    lastname: String!
+    nickname: String
+    phone: String
+    birthdate: Date!
+    email: String!
+}
+
 "Indicates what fields are available at the top level of a query operation."
 type Query @guard {
     "Find a single user by an identifying attribute."
@@ -45,6 +55,7 @@ type Query @guard {
 }
 
 extend type Mutation @guard {
+    updateMe(input: UpdateMeInput  @spread): User! @can(ability: "updateMe") @update
     updateUser(id: ID!, input: UserInput  @spread): User! @can(ability: "update", injectArgs: true, model: "App\\Models\\User") @field(resolver: "\\App\\GraphQL\\Mutations\\UpdateUser")
     deleteUser(id: ID! @where(operator: "=")): User @delete @can(ability: "delete", find: "id")
 }

@@ -1,94 +1,232 @@
 <template>
-  <q-page class="q-pa-m">
-    <h3>Profil</h3>
-    <div class="q-pa-md" style="max-width: 400px">
-    <h4>Passwort ändern</h4>
-    <q-form @submit.prevent="changePassword">
-      <q-input
-          type="password"
-          v-model="current_password"
-          label="Aktuelles Passwort"
-          :rules="[ val => val && val.length > 0 || 'Bitte aktuelles Passwort eingeben']"
-      ></q-input>
-      <q-input
-          type="password"
-          v-model="password"
-          label="Neues Passwort"
-          lazy-rules
-          :rules="[ val => val && val.length >= 8 || 'Passwort muss mindestens 8 Zeichen haben']"
-      ></q-input>
-      <q-input
-          type="password"
-          v-model="password_confirmation"
-          label="Passwort bestätigen"
-          lazy-rules
-          :rules="[ val => val && val === password || 'Passwort muss identisch sein']"
-      ></q-input>
-      <q-btn type="submit" block class="mt-2" :disabled="loading">Passwort ändern</q-btn>
-      <div v-if="loading">Passwort wird geändert...</div>
-      <div v-if="validationErrors">{{validationErrors}}</div>
-      <div v-if="error">Fehler beim abschicken, bitte erneut versuchen!</div>
-    </q-form>
-    <div v-if="done">Passwort erfolgreich geändert!</div>
-    </div>
+  <q-page>
+      <q-card class="q-pa-lg-lg q-pa-sm full-width">
+          <q-card-section>
+              <div class="text-h4">Profil</div>
+          </q-card-section>
+        <div class="row">
+          <div class="col-12 col-lg-6">
+            <q-card class="q-ma-md-lg q-pa-md-lg q-ma-sm">
+                <q-form @submit.prevent="updateMe" @reset="resetMe">
+                <q-card-section>
+                    <q-input
+                      type="text"
+                      v-model="editMe.firstname"
+                      label="Vorname*"
+                      :rules="[val => val && val.length > 0 || 'Vorname darf nicht leer sein']"/>
+                    <q-input
+                      type="text"
+                      v-model="editMe.lastname"
+                      label="Nachname*"
+                      :rules="[val => val && val.length > 0 || 'Nachname darf nicht leer sein']"/>
+                    <q-input
+                      type="text"
+                      v-model="editMe.nickname"
+                      label="Spitzname" />
+                    <q-input
+                      type="email"
+                      v-model="editMe.email"
+                      label="E-Mail*"
+                      :rules="[val => val && val.length > 0 || 'E-Mail darf nicht leer sein']"/>
+                    <q-input
+                            label="Geburtsdatum*"
+                            v-model="formattedBirthdate"
+                            :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein']">
+                        <template v-slot:append>
+                            <q-icon name="event" class="cursor-pointer">
+                                <q-popup-proxy
+                                  ref="proxyBirthdate"
+                                  transition-show="scale"
+                                  transition-hide="scale">
+                                  <q-date
+                                      minimal
+                                      v-model="formattedBirthdate"
+                                      @update:model-value="$refs.proxyBirthdate.hide()"
+                                      mask="DD.MM.YYYY">
+                                  </q-date>
+                                </q-popup-proxy>
+                            </q-icon>
+                        </template>
+                    </q-input>
+                    <q-input
+                      type="text"
+                      v-model="editMe.phone"
+                      hint="Bei Kindern bitte die Nummer der Eltern für Notfälle"
+                      label="Telefonnummer" />
+                    <p class="text-red" v-if="profileValidationErrors">{{profileValidationErrors}}</p>
+                </q-card-section>
+                <q-card-actions>
+                    <q-btn type="submit" color="primary" block class="mt-2" :disabled="loading">Speichern</q-btn>
+                    <q-btn type="reset" block class="mt-2" :disabled="loading">Zurücksetzen</q-btn>
+                </q-card-actions>
+                </q-form>
+            </q-card>
+          </div>
+      </div>
+        <div class="row">
+          <div class="col-12 col-lg-6">
+            <q-card class="q-ma-md-lg q-pa-md-lg q-ma-sm">
+              <q-card-section>
+                <div class="text-h6">Passwort ändern</div>
+              </q-card-section>
+              <q-card-section>
+                  <q-form ref="passwordForm" @submit.prevent="changePassword">
+                      <q-input
+                              type="password"
+                              v-model="current_password"
+                              label="Aktuelles Passwort"
+                              lazy-rules='ondemand'
+                              :rules="[ val => val && val.length > 0 || 'Bitte aktuelles Passwort eingeben']"
+                      ></q-input>
+                      <q-input
+                              type="password"
+                              v-model="password"
+                              label="Neues Passwort"
+                              lazy-rules='ondemand'
+                              :rules="[ val => val && val.length >= 8 || 'Passwort muss mindestens 8 Zeichen haben']"
+                      ></q-input>
+                      <q-input
+                              type="password"
+                              v-model="password_confirmation"
+                              label="Passwort bestätigen"
+                              lazy-rules='ondemand'
+                              :rules="[ val => val && val === password || 'Passwort muss identisch sein']"
+                      ></q-input>
+                      <q-btn type="submit" color="primary" class="mt-2" :disabled="loading">Passwort ändern</q-btn>
+                      <div v-if="passwordValidationErrors">{{passwordValidationErrors}}</div>
+                  </q-form>
+              </q-card-section>
+            </q-card>
+          </div>
+      </div>
+      </q-card>
   </q-page>
 
 </template>
-<script>
-import {ref} from "vue";
-import {useMutation} from "@vue/apollo-composable";
+<script lang="ts">
+
+import {computed, ref} from "vue";
 import updatepassword from "../queries/updatepassword.mutation.gql";
+import {date, useQuasar} from "quasar";
+import apolloClient from "../apollo";
+import meQuery from "../queries/me.query.gql";
+import meMutation from "../queries/me.mutation.gql";
 
 export default {
-  setup () {
-    const done = ref(false);
+  emits: ["user-updated"],
+  setup (props, { emit }) {
+    const loading = ref(false);
+    const $q = useQuasar();
+    const me = ref({})
+    const editMe = ref({})
+    const formattedBirthdate = computed({
+        get() {
+            return date.formatDate(editMe.value.birthdate, 'DD.MM.YYYY');
+        },
+        set(value) {
+            editMe.value.birthdate = date.formatDate(date.extractDate(value, 'DD.MM.YYYY'),'YYYY-MM-DD');
+        }
+    });
+    const passwordForm = ref('');
     const current_password = ref('');
     const password = ref('');
     const password_confirmation = ref('');
-    const validationErrors = ref('');
+    const passwordValidationErrors = ref('');
+    const profileValidationErrors = ref('');
 
-    const { mutate: changePassword, loading, error, onError, onDone } = useMutation(updatepassword, () => ({
-      variables: {
-        current_password: current_password.value,
-        password: password.value,
-        password_confirmation: password_confirmation.value,
-      },
-    }))
-
-    onDone(() => {
-      done.value = true;
-      validationErrors.value = '';
-      current_password.value = '';
-      password_confirmation.value = '';
-      password.value = '';
+    apolloClient.query({query: meQuery}).then((response => {
+        me.value = response.data.me;
+        editMe.value = {...me.value};
+    })).catch(() => {
+        localStorage.removeItem('accessToken');
+        $q.notify({
+            type: 'negative',
+            message: 'Fehler beim Laden des Benutzers'
+        })
     })
 
-    onError(error => {
-      done.value = false;
-      let { graphQLErrors } = error;
-      if (graphQLErrors[0].extensions.category === "validation") {
-        validationErrors.value = graphQLErrors[0].extensions.validation;
+      const changePassword = () => {
+          loading.value = true;
+          apolloClient.mutate({mutation: updatepassword, variables: {
+                  current_password: current_password.value,
+                  password: password.value,
+                  password_confirmation: password_confirmation.value,
+          }}).then(() => {
+              $q.notify({
+                  type: 'positive',
+                  message: 'Passwort erfolgreich geändert'
+              })
+              password_confirmation.value = '';
+              password.value = '';
+              current_password.value = '';
+              passwordForm.value.resetValidation();
+          }).catch(({ graphQLErrors }) => {
+              $q.notify({
+                  type: 'negative',
+                  message: 'Fehler beim Ändern des Passworts'
+              })
+              if (graphQLErrors[0].extensions.category === "validation") {
+                  passwordValidationErrors.value = graphQLErrors[0].extensions.validation;
+              }
+          }).finally(() => {
+              loading.value = false;
+          })
       }
-    })
+
+      const updateMe = () => {
+          loading.value = true;
+          profileValidationErrors.value = '';
+          apolloClient.mutate({
+              mutation: meMutation,
+              variables: {
+                  id: editMe.value.id,
+                  firstname: editMe.value.firstname,
+                  lastname: editMe.value.lastname,
+                  nickname: editMe.value.nickname,
+                  email: editMe.value.email,
+                  birthdate: editMe.value.birthdate,
+                  phone: editMe.value.phone,
+              },
+          }).then(({data}) => {
+              me.value = data.updateMe;
+              editMe.value = {...me.value};
+              emit('user-updated', me.value);
+              $q.notify({
+                  type: 'positive',
+                  message: 'Profil erfolgreich aktualisiert'
+              })
+          }).catch(({graphQLErrors}) => {
+              if (graphQLErrors[0].extensions.category === "validation") {
+                  profileValidationErrors.value = graphQLErrors[0].extensions.validation;
+              }
+              $q.notify({
+                  type: 'negative',
+                  message: 'Fehler beim Aktualisieren des Profils'
+              })
+          }).finally(() => {
+              loading.value = false;
+          })
+      }
+      const resetMe = () => {
+          editMe.value = {...me.value};
+      }
 
     return {
       changePassword,
+      updateMe,
+      resetMe,
       loading,
-      error,
       current_password,
       password_confirmation,
       password,
-      validationErrors,
-      done
+      passwordValidationErrors,
+      profileValidationErrors,
+      me,
+      editMe,
+      date,
+      passwordForm,
+      formattedBirthdate,
     }
   },
-  data() {
-    return {
-      firstname: String
-    }
-  },
-  created() {
-    this.firstname="test";
-  }
 }
 </script>
