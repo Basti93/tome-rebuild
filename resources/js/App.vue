@@ -13,7 +13,8 @@
 
         <q-btn v-show="loggedIn" :label="me.nickname ? me.nickname : me.firstname" flat>
           <q-avatar size="26px">
-            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+            <img v-if="me.imageUrl" :src="me.imageUrl">
+            <img v-else src="../img/boy-avatar.png">
           </q-avatar>
           <q-tooltip>Profil</q-tooltip>
         </q-btn>
@@ -127,7 +128,7 @@ export default {
     const updateLoginState = () => {
         loggedIn.value = localStorage.getItem('accessToken') !== null;
         if (loggedIn.value) {
-            apolloClient.query({query: meQuery}).then(({data}) => {
+            apolloClient.query({query: meQuery, fetchPolicy: "network-only"}).then(({data}) => {
                 me.value = data.me;
             }).catch(() => {
                 $q.notify({

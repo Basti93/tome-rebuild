@@ -2,60 +2,10 @@
 scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 
+
 #import role.graphql
+#import user.graphql
 #import group.graphql
 #import sanctum.graphql
 
-input UserInput {
-    firstname: String
-    lastname: String
-    nickname: String
-    phone: String
-    birthdate: Date
-    email: String @rules(apply: ["bail", "email", "unique:users,email"])
-    roles: [ID!] @rules(apply: ["exists:roles,id"])
-    groups: [ID!] @rules(apply: ["exists:groups,id"])
-}
 
-input UpdateMeInput @validator(class: "App\\GraphQL\\Validators\\UpdateMeInputValidator"){
-    id: ID!
-    firstname: String!
-    lastname: String!
-    nickname: String
-    phone: String
-    birthdate: Date!
-    email: String!
-}
-
-"Indicates what fields are available at the top level of a query operation."
-type Query @guard {
-    "Find a single user by an identifying attribute."
-    user(
-      "Search by primary key."
-      id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
-
-      "Search by email address."
-      email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
-    ): User @find
-
-    "List multiple users."
-    users(
-      "Filters. Accepts SQL LIKE wildcards `%` and `_`."
-      firstname: String @where(operator: "like")
-      lastname: String @where(operator: "like")
-      nickname: String @where(operator: "like")
-      approved: Boolean @scope
-      hasRole: _ @whereHasConditions(relation: "roles", columns: ["id", "name"])
-      hasGroup: _ @whereHasConditions(relation: "groups", columns: ["id", "name"])
-      orderBy: _ @orderBy(columns: ["id", "firstname", "lastname", "nickname", "phone", "birthdate", "email", "created_at", "approved"])
-    ): [User!]! @can(ability: "viewAny") @paginate(defaultCount: 25) @softDeletes
-
-    me: User @auth
-
-}
-
-extend type Mutation @guard {
-    updateMe(input: UpdateMeInput  @spread): User! @can(ability: "updateMe") @update
-    updateUser(id: ID!, input: UserInput  @spread): User! @can(ability: "update", injectArgs: true, model: "App\\Models\\User") @field(resolver: "\\App\\GraphQL\\Mutations\\UpdateUser")
-    deleteUser(id: ID! @where(operator: "=")): User @delete @can(ability: "delete", find: "id")
-}

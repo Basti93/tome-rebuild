@@ -7,6 +7,48 @@
         <div class="row">
           <div class="col-12 col-lg-6">
             <q-card class="q-ma-md-lg q-pa-md-lg q-ma-sm">
+                <q-card-section>
+                    <q-avatar class="q-ma-md-lg q-ma-sm" size="150px">
+                        <img v-if="me.imageUrl" :src="me.imageUrl">
+                        <img v-else src="../../img/boy-avatar.png">
+                    </q-avatar>
+                    <div class="text-h5">{{ me.firstname }} {{ me.lastname }}</div>
+                    <div class="text-h6">{{ me.nickname }}</div>
+                </q-card-section>
+                <q-form ref="uploadProfileImageForm" @submit.prevent="uploadProfileImage">
+                  <q-card-section>
+
+                    <q-file
+                      filled
+                      bottom-slots
+                      v-model="profileImageUpload"
+                      label="Neues Profilbild hochladen"
+                      :hint="profileImageUpload ? profileImageUpload.name : 'Bitte wählen Sie ein Bild aus'"
+                      max-file-size="5242880"
+                      accept="image/*"
+                      max-files="1"
+                      counter>
+                        <template v-slot:prepend>
+                            <q-icon name="cloud_upload" @click.stop.prevent />
+                        </template>
+                        <template v-slot:append>
+                            <q-icon name="close" @click.stop.prevent="profileImageUpload = null" class="cursor-pointer" />
+                        </template>
+                        <template v-slot:hint>
+                            Maximal 5 MB
+                        </template>
+                      </q-file>
+                  </q-card-section>
+                  <q-card-actions>
+                      <q-btn type="submit" :disable="!profileImageUpload || profileImageUpload.length === 0" color="primary" label="Speichern" />
+                  </q-card-actions>
+                </q-form>
+            </q-card>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12 col-lg-6">
+            <q-card class="q-ma-md-lg q-pa-md-lg q-ma-sm">
                 <q-form @submit.prevent="updateMe" @reset="resetMe">
                 <q-card-section>
                     <q-input
@@ -111,6 +153,7 @@ import {date, useQuasar} from "quasar";
 import apolloClient from "../apollo";
 import meQuery from "../queries/me.query.gql";
 import meMutation from "../queries/me.mutation.gql";
+import uploadProfileImageMutation from "../queries/uploadprofileimage.mutation.gql";
 
 export default {
   emits: ["user-updated"],
@@ -118,7 +161,9 @@ export default {
     const loading = ref(false);
     const $q = useQuasar();
     const me = ref({})
+    const uploadProfileImageForm = ref(null);
     const editMe = ref({})
+    const profileImageUpload = ref(null);
     const formattedBirthdate = computed({
         get() {
             return date.formatDate(editMe.value.birthdate, 'DD.MM.YYYY');
@@ -134,43 +179,56 @@ export default {
     const passwordValidationErrors = ref('');
     const profileValidationErrors = ref('');
 
-    apolloClient.query({query: meQuery}).then((response => {
-        me.value = response.data.me;
-        editMe.value = {...me.value};
-    })).catch(() => {
-        localStorage.removeItem('accessToken');
-        $q.notify({
-            type: 'negative',
-            message: 'Fehler beim Laden des Benutzers'
+      const fetchMe = () => {
+        loading.value = true;
+        apolloClient.query({query: meQuery, fetchPolicy: "network-only"})
+        .then(({data}) => {
+            updateUserObjects(data.me);
+        }).catch(() => {
+            localStorage.removeItem('accessToken');
+            $q.notify({
+                type: 'negative',
+                message: 'Fehler beim Laden des Benutzers'
+            })
         })
-    })
+        loading.value = false;
+    }
 
-      const changePassword = () => {
-          loading.value = true;
-          apolloClient.mutate({mutation: updatepassword, variables: {
-                  current_password: current_password.value,
-                  password: password.value,
-                  password_confirmation: password_confirmation.value,
-          }}).then(() => {
-              $q.notify({
-                  type: 'positive',
-                  message: 'Passwort erfolgreich geändert'
-              })
-              password_confirmation.value = '';
-              password.value = '';
-              current_password.value = '';
-              passwordForm.value.resetValidation();
-          }).catch(({ graphQLErrors }) => {
-              $q.notify({
-                  type: 'negative',
-                  message: 'Fehler beim Ändern des Passworts'
-              })
-              if (graphQLErrors[0].extensions.category === "validation") {
-                  passwordValidationErrors.value = graphQLErrors[0].extensions.validation;
-              }
-          }).finally(() => {
-              loading.value = false;
-          })
+    fetchMe();
+
+    const changePassword = () => {
+        loading.value = true;
+        apolloClient.mutate({mutation: updatepassword, variables: {
+                current_password: current_password.value,
+                password: password.value,
+                password_confirmation: password_confirmation.value,
+        }}).then(() => {
+            $q.notify({
+                type: 'positive',
+                message: 'Passwort erfolgreich geändert'
+            })
+            password_confirmation.value = '';
+            password.value = '';
+            current_password.value = '';
+            passwordForm.value.resetValidation();
+        }).catch(({ graphQLErrors }) => {
+            $q.notify({
+                type: 'negative',
+                message: 'Fehler beim Ändern des Passworts'
+            })
+            if (graphQLErrors[0].extensions.category === "validation") {
+                passwordValidationErrors.value = graphQLErrors[0].extensions.validation;
+            }
+        }).finally(() => {
+            loading.value = false;
+        })
+      }
+
+      const updateUserObjects = (user) => {
+          me.value = user;
+          editMe.value = {...me.value};
+          editMe.value.birthdate = date.formatDate(editMe.value.birthdate, 'YYYY-MM-DD')
+          emit('user-updated');
       }
 
       const updateMe = () => {
@@ -188,9 +246,7 @@ export default {
                   phone: editMe.value.phone,
               },
           }).then(({data}) => {
-              me.value = data.updateMe;
-              editMe.value = {...me.value};
-              emit('user-updated', me.value);
+              updateUserObjects(data.updateMe);
               $q.notify({
                   type: 'positive',
                   message: 'Profil erfolgreich aktualisiert'
@@ -211,6 +267,34 @@ export default {
           editMe.value = {...me.value};
       }
 
+      const uploadProfileImage = () => {
+          loading.value = true;
+          apolloClient.mutate({
+              mutation: uploadProfileImageMutation,
+              variables: {
+                  id: me.value.id,
+                  file: profileImageUpload.value,
+              },
+          }).then(() => {
+              $q.notify({
+                  type: 'positive',
+                  message: 'Profilbild erfolgreich aktualisiert'
+              })
+              profileImageUpload.value = null;
+              fetchMe()
+          }).catch(({graphQLErrors}) => {
+              if (graphQLErrors[0].extensions.category === "validation") {
+                  profileValidationErrors.value = graphQLErrors[0].extensions.validation;
+              }
+              $q.notify({
+                  type: 'negative',
+                  message: 'Fehler beim Aktualisieren des Profilbildes'
+              })
+          }).finally(() => {
+              loading.value = false;
+          })
+      }
+
     return {
       changePassword,
       updateMe,
@@ -226,6 +310,9 @@ export default {
       date,
       passwordForm,
       formattedBirthdate,
+      profileImageUpload,
+      uploadProfileImage,
+      uploadProfileImageForm,
     }
   },
 }

@@ -1,5 +1,6 @@
 import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core'
 import { setContext } from 'apollo-link-context';
+import { createUploadLink } from 'apollo-upload-client'
 
 // XSRF token is required to make post requests to your Laravel backend
 const authLink = setContext((_, { headers }) => {
@@ -14,7 +15,7 @@ const authLink = setContext((_, { headers }) => {
 });
 
 // HTTP connection to the API
-const httpLink = createHttpLink({
+const httpLink = createUploadLink({
     credentials: 'same-origin',
     uri: import.meta.env.VITE_BASE_URL + '/graphql',
 })

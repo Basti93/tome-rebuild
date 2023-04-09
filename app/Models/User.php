@@ -74,6 +74,11 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         return $this->can('login');
     }
 
+    public function getImageUrlAttribute(): String
+    {
+        return $this->image ? asset('storage/' . $this->image) : '';
+    }
+
     public function scopeApproved(Builder $query, bool $approved): Builder
     {
         $scopeQuery = function ($query) use ($approved) {

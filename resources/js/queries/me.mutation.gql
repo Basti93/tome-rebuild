@@ -23,5 +23,7 @@ mutation updateMe (
         birthdate
         phone
         email
+        image
+        imageUrl
     }
 }
