@@ -61,26 +61,14 @@
                         v-model="editMe.email"
                         label="E-Mail*"
                         :rules="[val => val && val.length > 0 || 'E-Mail darf nicht leer sein']"/>
-                      <q-input
-                              label="Geburtsdatum*"
-                              v-model="formattedBirthdate"
-                              :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein']">
-                          <template v-slot:append>
-                              <q-icon name="event" class="cursor-pointer">
-                                  <q-popup-proxy
-                                    ref="proxyBirthdate"
-                                    transition-show="scale"
-                                    transition-hide="scale">
-                                    <q-date
-                                        minimal
-                                        v-model="formattedBirthdate"
-                                        @update:model-value="$refs.proxyBirthdate.hide()"
-                                        mask="DD.MM.YYYY">
-                                    </q-date>
-                                  </q-popup-proxy>
-                              </q-icon>
-                          </template>
-                      </q-input>
+                      <q-date
+                              :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein' && date.isValid(val) || 'Kein gültiges Datum.']"
+                              v-model="editMe.birthdate"
+                              no-unset
+                              :title="date.formatDate(editMe.birthdate, 'DD.MM.YYYY')"
+                              subtitle="Geburtstag*"
+                              mask="YYYY-MM-DD">
+                      </q-date>
                       <q-input
                         type="text"
                         v-model="editMe.phone"
@@ -149,14 +137,6 @@ export default {
     const uploadProfileImageForm = ref(null);
     const editMe = ref({})
     const profileImageUpload = ref(null);
-    const formattedBirthdate = computed({
-        get() {
-            return date.formatDate(editMe.value.birthdate, 'DD.MM.YYYY');
-        },
-        set(value) {
-            editMe.value.birthdate = date.formatDate(date.extractDate(value, 'DD.MM.YYYY'),'YYYY-MM-DD');
-        }
-    });
     const passwordForm = ref('');
     const current_password = ref('');
     const password = ref('');
@@ -294,7 +274,6 @@ export default {
       editMe,
       date,
       passwordForm,
-      formattedBirthdate,
       profileImageUpload,
       uploadProfileImage,
       uploadProfileImageForm,

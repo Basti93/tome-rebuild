@@ -36,7 +36,7 @@ class Role extends SpatieRole
                  * if not, remove role id 2 from query (Trainer)
                  */
                 ->when(
-                    !auth()->user()->can('view-role-trainer'),
+                    !auth()->user()->can('view-role-coach'),
                     function (Builder $builder) {
                         $builder->whereNot('id', 2);
                     }

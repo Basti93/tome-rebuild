@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('trainings', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->nullable();
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->dateTimeTz('date_start');
             $table->dateTimeTz('date_end');
-            $table->foreignId('location_id')->constrained('locations');
+            $table->foreignId('location_id')->nullable()->constrained('locations')->restrictOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

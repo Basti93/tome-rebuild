@@ -15,4 +15,9 @@ class Group extends Model
     {
         return $this->belongsToMany(User::class, 'groups_users');
     }
+
+    public function trainings(): BelongsToMany
+    {
+        return $this->belongsToMany(Training::class, 'trainings_groups');
+    }
 }

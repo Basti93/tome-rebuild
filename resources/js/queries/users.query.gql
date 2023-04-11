@@ -1,7 +1,11 @@
-query getUsers {
-    users {
+query getUsers($hasRole: QueryUsersHasRoleWhereHasConditions) {
+    users(
+        hasRole: $hasRole
+    ) {
         id
         firstname
-        email
+        lastname
+        nickname
+        imageUrl
     }
 }

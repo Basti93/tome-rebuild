@@ -1,0 +1,49 @@
+type Training @guard{
+    id: ID!
+    name: String
+    description: String
+    status: Boolean!
+    date_start: DateTime!
+    date_end: DateTime!
+    location: Location @belongsTo
+    created_at: DateTime
+    athletes: [User!] @hasMany
+    coaches: [User!] @hasMany
+    groups: [Group!] @hasMany
+}
+
+input TrainingInput {
+    name: String
+    description: String
+    status: Boolean
+    date_start: DateTime
+    date_end: DateTime
+    location: ID
+    athletes: [ID!]
+    coaches: [ID!]
+    groups: [ID!]
+}
+
+extend type Query @guard {
+    "Find a single training by an identifying attribute."
+    training(
+        "Search by primary key."
+        id: ID! @eq
+    ): Training @find @can(ability: "view")
+
+    "List multiple trainings."
+    trainings(
+        "Filters to apply to the query."
+        where: _ @whereConditions(columns: ["id", "status", "date_start", "date_end", "groups", "locations", "users", "created_at"])
+        "Sort the results by one or more attributes."
+        orderBy: _ @orderBy(columns: ["id", "status", "date_start", "date_end", "created_at" ])
+    ): [Training!]! @can(ability: "viewAny") @paginate(defaultCount: 25) @softDeletes
+
+}
+
+extend type Mutation @guard {
+    createTraining(input: TrainingInput  @spread): Training! @can(ability: "create") @create
+    updateTraining(id: ID!, input: TrainingInput  @spread): Training! @can(ability: "update") @update
+    deleteTraining(id: ID! @where(operator: "=")): Training @delete @can(ability: "delete", find: "id")
+}
+

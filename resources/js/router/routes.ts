@@ -19,6 +19,11 @@ export default [
                 component: () => import("@/views/Register.vue"),
             },
             {
+                path: "/trainings",
+                name: "Trainings",
+                component: () => import("@/views/Trainings.vue"),
+            },
+            {
                 path: "/users",
                 name: "Users",
                 component: () => import("@/views/Users.vue"),

@@ -66,7 +66,7 @@ class UserPolicy
             if (in_array(1, $args['roles']) && !$user->hasPermissionTo('edit-role-admin')) {
                 return false;
             }
-            if (in_array(2, $args['roles']) && !$user->hasPermissionTo('edit-role-trainer')) {
+            if (in_array(2, $args['roles']) && !$user->hasPermissionTo('edit-role-coach')) {
                 return false;
             }
         }
@@ -84,7 +84,7 @@ class UserPolicy
         if ($user->id === $model->id) {
            return false;
         }
-        return !$model->hasRole("trainer")
+        return !$model->hasRole("coach")
             && !$model->hasRole("admin")
             && $user->hasPermissionTo('edit-user');
     }

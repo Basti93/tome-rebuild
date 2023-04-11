@@ -23,6 +23,7 @@ class UserTableSeeder extends Seeder
                 'lastname' => 'Testuser',
                 'phone' => '8123012313',
                 'email' => env('MAIL_FROM_ADMIN'),
+                'email_verified_at' => now(),
             ],
         ];
 
@@ -63,6 +64,7 @@ class UserTableSeeder extends Seeder
                     'birthdate' => now(),
                     'password' => Hash::make('password'),
                     'remember_token' => Str::random(10),
+                    'email_verified_at' => now(),
                 ]
             );
         }

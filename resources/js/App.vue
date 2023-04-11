@@ -84,6 +84,13 @@ export default {
         show: computed(() => showMenuItem(loggedIn, true, true))
       },
       {
+        icon: 'list',
+        label: 'Trainings',
+        separator: false,
+        to: "/trainings",
+        show: computed(() => showMenuItem(loggedIn, true, true) && hasPermission(me.value, 'edit-training'))
+      },
+      {
         icon: 'manage_accounts',
         label: 'Mitglieder',
         separator: false,

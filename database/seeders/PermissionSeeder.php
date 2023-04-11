@@ -20,7 +20,7 @@ class PermissionSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $admin = Role::updateOrCreate(['id' => 1], ['name' => 'admin', 'guard_name' => 'sanctum']);
-        $trainer = Role::updateOrCreate(['id' => 2], ['name' => 'trainer', 'guard_name' => 'sanctum']);
+        $trainer = Role::updateOrCreate(['id' => 2], ['name' => 'coach', 'guard_name' => 'sanctum']);
         $athlete = Role::updateOrCreate(['id' => 3], ['name' => 'athlete', 'guard_name' => 'sanctum']);
 
 
@@ -33,8 +33,8 @@ class PermissionSeeder extends Seeder
         $rolePermission[] = Permission::updateOrCreate(['id' => 5], ['name' => 'view-role']);
         $adminRolePermission[] = Permission::updateOrCreate(['id' => 6], ['name' => 'view-role-admin']);
         $adminRolePermission[] = Permission::updateOrCreate(['id' => 7], ['name' => 'edit-role-admin']);
-        $trainerRolePermission[] = Permission::updateOrCreate(['id' => 8], ['name' => 'edit-role-trainer']);
-        $trainerRolePermission[] = Permission::updateOrCreate(['id' => 9], ['name' => 'view-role-trainer']);
+        $trainerRolePermission[] = Permission::updateOrCreate(['id' => 8], ['name' => 'edit-role-coach']);
+        $trainerRolePermission[] = Permission::updateOrCreate(['id' => 9], ['name' => 'view-role-coach']);
         $rolePermission[] = Permission::updateOrCreate(['id' => 10], ['name' => 'view-role-user']);
 
         $editGroupPermission[] = Permission::updateOrCreate(['id' => 11], ['name' => 'edit-group']);
@@ -46,6 +46,9 @@ class PermissionSeeder extends Seeder
         $editConfigPermission[] = Permission::updateOrCreate(['id' => 15], ['name' => 'edit-config']);
         $configPermission[] = Permission::updateOrCreate(['id' => 16], ['name' => 'view-config']);
 
+        $editTrainingPermission[] = Permission::updateOrCreate(['id' => 17], ['name' => 'edit-training']);
+        $trainingPermission[] = Permission::updateOrCreate(['id' => 18], ['name' => 'view-training']);
+
 
         $this->sync($trainer, $trainerRolePermission);
         $this->sync($trainer, $userPermission);
@@ -56,6 +59,8 @@ class PermissionSeeder extends Seeder
         $this->sync($trainer, $locationPermission);
         $this->sync($trainer, $editLocationPermission);
         $this->sync($trainer, $configPermission);
+        $this->sync($trainer, $trainingPermission);
+        $this->sync($trainer, $editTrainingPermission);
 
         $this->sync($admin, $adminRolePermission);
         $this->sync($admin, $trainerRolePermission);
@@ -68,15 +73,18 @@ class PermissionSeeder extends Seeder
         $this->sync($admin, $editLocationPermission);
         $this->sync($admin, $editConfigPermission);
         $this->sync($admin, $configPermission);
+        $this->sync($admin, $trainingPermission);
+        $this->sync($admin, $editTrainingPermission);
 
         $this->sync($athlete, $userPermission);
         $this->sync($athlete, $groupPermission);
-        $this->sync($trainer, $locationPermission);
+        $this->sync($athlete, $locationPermission);
         $this->sync($athlete, $configPermission);
+        $this->sync($athlete, $trainingPermission);
 
         User::whereEmail(env('MAIL_FROM_ADMIN'))->first()->assignRole('admin');
         if (env('APP_DEBUG')) {
-            User::whereEmail(env('MAIL_FROM_TEST_TRAINER'))->first()->assignRole('trainer');
+            User::whereEmail(env('MAIL_FROM_TEST_TRAINER'))->first()->assignRole('coach');
             User::whereEmail(env('MAIL_FROM_TEST_USER'))->first()->assignRole('athlete');
         }
 

@@ -4,7 +4,7 @@
         <q-table
             class="col-12"
             ref="tableRef"
-            title="Users"
+            title="Trainings"
             :rows="rows"
             :columns="columns"
             row-key="id"
@@ -20,7 +20,7 @@
           <template v-slot:top>
                 <div class="row full-width">
                     <div class="col">
-                        <p class="text-h4">Mitglieder</p>
+                        <p class="text-h4">Trainings</p>
                         <p class="text-subtitle-1">Zum Editieren auf die Zeilen klicken</p>
                     </div>
                     <div class="col self-center">
@@ -54,8 +54,8 @@
                               @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
                               :options="[
                                 { label: 'Alle', value: 'all' },
-                                { label: 'Freigeschaltet', value: 'approved' },
-                                { label: 'Nicht freigeschaltet', value: 'notApproved' }
+                                { label: 'Serientermine', value: 'approved' },
+                                { label: 'Manuel angelegt', value: 'notApproved' }
                               ]"
                               toggle-color="primary"
                               rounded />
@@ -83,10 +83,10 @@
           </template>
 
           <template v-slot:body="props">
-            <q-tr :props="props">
+            <q-tr :props="props" :style="props.row.date_start > Date.now() ? 'text-color:blue' : ''">
               <q-td key="id" :props="props">{{ props.row.id }}</q-td>
-              <q-td key="nickname" :props="props">{{ props.row.nickname }}
-                <q-popup-edit :model-value="props.row.nickname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'nickname', value)">
+              <q-td key="name" :props="props">{{ props.row.name }}
+                <q-popup-edit :model-value="props.row.name" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'name', value)">
                   <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
                     <template v-slot:after>
                       <q-btn
@@ -102,11 +102,12 @@
                   </q-input>
                 </q-popup-edit>
               </q-td>
-              <q-td key="firstname" :props="props">
-                {{ props.row.firstname }}
-                <q-popup-edit :model-value="props.row.firstname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'firstname', value)">
+              <q-td key="description" :props="props">
+                {{ props.row.description.length > 20 ? props.row.description.substring(0, 20) + '...' : props.row.description }}
+                <q-popup-edit :model-value="props.row.description" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'description', value)">
                   <q-input v-model="scope.value"
                            dense autofocus
+                           type="textarea"
                            @keyup.enter="scope.set"
                            :rules="[val => val && val.length > 0 || 'Feld darf nicht leer sein']">
                     <template v-slot:after>
@@ -123,13 +124,56 @@
                   </q-input>
                 </q-popup-edit>
               </q-td>
+              <q-td key="status" :props="props">
+                  <q-btn v-if="props.row.status" @click="updateTraining(props.row.id, 'status', false)" size="xs" outline round icon="check" color="green" />
+                  <q-btn v-if="!props.row.status" @click="updateTraining(props.row.id, 'status', true)" size="xs" outline round icon="clear" color="red" />
+              </q-td>
+              <q-td key="date_start" :props="props">{{ date.formatDate(props.row.date_start, 'DD.MM.YYYY HH:mm') }}
+                <q-popup-edit :model-value="props.row.date_start" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'date_start', value)">
+                    <div class="row">
+                    <q-date v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
+                    <q-time v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
+                    </div>
+                    <div class="row">
+                    <q-btn
+                            label="Abbrechen"
+                            flat dense color="negative" icon="cancel"
+                            @click.stop.prevent="scope.cancel"
+                    />
 
-              <q-td key="lastname" :props="props">{{ props.row.lastname }}
-                <q-popup-edit :model-value="props.row.lastname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'lastname', value)">
-                  <q-input v-model="scope.value"
-                           dense autofocus
-                           @keyup.enter="scope.set"
-                           :rules="[val => val && val.length > 0 || 'Feld darf nicht leer sein']">
+                    <q-btn
+                            label="Speichern"
+                            flat dense color="positive" icon="check_circle"
+                            @click.stop.prevent="scope.set"
+                    />
+                    </div>
+                </q-popup-edit>
+              </q-td>
+              <q-td key="date_end" :props="props">{{ date.formatDate(props.row.date_end, 'DD.MM.YYYY HH:mm') }}
+                <q-popup-edit :model-value="props.row.date_end" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'date_end', value)">
+                    <div class="row">
+                    <q-date v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
+                    <q-time v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
+                    </div>
+                    <div class="row">
+                    <q-btn
+                            label="Abbrechen"
+                            flat dense color="negative" icon="cancel"
+                            @click.stop.prevent="scope.cancel"
+                    />
+
+                    <q-btn
+                            label="Speichern"
+                            flat dense color="positive" icon="check_circle"
+                            @click.stop.prevent="scope.set"
+                    />
+                    </div>
+                </q-popup-edit>
+              </q-td>
+              <q-td key="location" :props="props">
+                {{ props.row.location.name }}
+                <q-popup-edit :model-value="props.row.location" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'location', value.id)">
+                  <q-select v-model="scope.value" dense autofocus @keyup.enter="scope.set" :options="locations" option-value="id" option-label="name">
                     <template v-slot:after>
                       <q-btn
                           flat dense color="negative" icon="cancel"
@@ -141,40 +185,14 @@
                           @click.stop.prevent="scope.set"
                       />
                     </template>
-                  </q-input>
+                  </q-select>
                 </q-popup-edit>
               </q-td>
-              <q-td key="phone" :props="props">
-                  <p><a :href="'tel:' + props.row.phone"><q-icon name="phone"/>{{props.row.phone}}</a></p>
-                  <p><a :href="'https://wa.me/' + props.row.phone">Whatsapp</a></p>
-              </q-td>
-              <q-td key="email" :props="props"><a :href="'mailto:' + props.row.email">{{props.row.email}}</a></q-td>
-              <q-td key="birthdate" :props="props">{{ date.formatDate(props.row.birthdate, 'DD.MM.YYYY') }}
-                <q-popup-edit :model-value="props.row.birthdate" v-slot="scope" @save="(value) => updateUser(props.row.id, 'birthdate', value)">
 
-                    <q-input type="date" :v-model="date.formatDate(scope.value, 'DD.MM.YYYY')" mask="date" :rules="[val => !val || /^-?[\d]+\.[0-1]\d\.[0-3]\d$/.test(val) || 'Falsches Format']" dense autofocus @keyup.enter="scope.set">
-                      <template v-slot:after>
-                          <q-btn
-                                  flat dense color="negative" icon="cancel"
-                                  @click.stop.prevent="scope.cancel"
-                          />
-
-                          <q-btn
-                                  flat dense color="positive" icon="check_circle"
-                                  @click.stop.prevent="scope.set"
-                          />
-                      </template>
-                  </q-input>
-                </q-popup-edit>
-              </q-td>
-              <q-td key="approved" :props="props">
-                <q-btn v-if="props.row.approved" :disable="props.row.roles.some(r => ['admin', 'coach'].includes(r.name))" @click="removeAthleteRole(props.row)" size="xs" outline round icon="check" color="green" />
-                <q-btn v-if="!props.row.approved" @click="addAthleteRole(props.row)" size="xs" outline round icon="clear" color="red" />
-              </q-td>
 
               <q-td key="groups" :props="props">
                   {{ props.row.groups.map(g => g.name).toString() }}
-                  <q-popup-edit :model-value="props.row.groups" v-slot="scope" @save="(value) => updateUser(props.row.id, 'groups', value.map(g => g.id))">
+                  <q-popup-edit :model-value="props.row.groups" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'groups', value.map(g => g.id))">
                       <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="groups" option-value="id" option-label="name">
                           <template v-slot:after>
                               <q-btn
@@ -190,23 +208,41 @@
                       </q-select>
                   </q-popup-edit>
               </q-td>
-              <q-td key="hasRole" :props="props">
-                  {{ props.row.roles.map(r => r.name).toString() }}
-                  <q-popup-edit :model-value="props.row.roles" v-slot="scope" @save="(value) => updateUser(props.row.id, 'roles', value.map(r => r.id))">
-                      <q-select v-model="scope.value" multiple dense autofocus @keyup.enter="scope.set" :options="roles" option-value="id" option-label="name">
-                          <template v-slot:after>
-                              <q-btn
-                                      flat dense color="negative" icon="cancel"
-                                      @click.stop.prevent="scope.cancel"
-                              />
+              <q-td key="athletes" :props="props">
+                {{ props.row.athletes ? props.row.athletes.length : 0 }}
+                <q-popup-edit :model-value="props.row.athletes" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'athletes', value.map(g => g.id))">
+                    <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="athletes" option-value="id" :option-label="(u) => u.nickname ? u.nickname : u.firstname + ' ' + u.lastname">
+                        <template v-slot:after>
+                            <q-btn
+                                    flat dense color="negative" icon="cancel"
+                                    @click.stop.prevent="scope.cancel"
+                            />
 
-                              <q-btn
-                                      flat dense color="positive" icon="check_circle"
-                                      @click.stop.prevent="scope.set"
-                              />
-                          </template>
-                      </q-select>
-                  </q-popup-edit>
+                            <q-btn
+                                    flat dense color="positive" icon="check_circle"
+                                    @click.stop.prevent="scope.set"
+                            />
+                        </template>
+                    </q-select>
+                </q-popup-edit>
+              </q-td>
+              <q-td key="coaches" :props="props">
+                {{ props.row.coaches.map(u => u.firstname + ' ' + u.lastname).toString() }}
+                <q-popup-edit :model-value="props.row.coaches" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'coaches', value.map(g => g.id))">
+                    <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="coaches" option-value="id" :option-label="(u) => u.nickname ? u.nickname : u.firstname + ' ' + u.lastname">
+                        <template v-slot:after>
+                            <q-btn
+                                    flat dense color="negative" icon="cancel"
+                                    @click.stop.prevent="scope.cancel"
+                            />
+
+                            <q-btn
+                                    flat dense color="positive" icon="check_circle"
+                                    @click.stop.prevent="scope.set"
+                            />
+                        </template>
+                    </q-select>
+                </q-popup-edit>
               </q-td>
               <q-td key="actions" :props="props">
                   <q-btn round flat icon="more_vert">
@@ -227,11 +263,14 @@
 </template>
 <script>
 
-import usersPaginationQuery from "../queries/userpagination.query.gql";
+import trainingsPaginationQuery from "../queries/trainingpagination.query.gql";
 import rolesQuery from "../queries/roles.query.gql";
+import locationsQuery from "../queries/locations.query.gql";
+import athletesQuery from "../queries/athletes.query.gql";
+import coachesQuery from "../queries/coaches.query.gql";
 import groupsQuery from "../queries/groups.query.gql";
-import deleteUsersMutation from "../queries/userdelete.mutation.gql";
-import updateUsersMutation from "../queries/userupdate.mutation.gql";
+import deleteTrainingsMutation from "../queries/trainingdelete.mutation.gql";
+import updateTrainingsMutation from "../queries/trainingupdate.mutation.gql";
 import {computed, onMounted, ref} from "vue";
 import apolloClient from "../apollo";
 import {date} from 'quasar'
@@ -240,7 +279,6 @@ import {useQuery} from "@vue/apollo-composable";
 
 
 export default {
-
   setup() {
     const $q = useQuasar()
     const tableRef = ref()
@@ -260,19 +298,22 @@ export default {
     })
     const columns = [
       {name: 'id', required: true, label: 'ID', align: 'left', field: 'id', sortable: true},
-      {name: 'nickname', align: 'center', label: 'Spitzname', field: 'nickname', sortable: true},
-      {name: 'firstname', align: 'center', label: 'Vorname', field: 'firstname', sortable: true},
-      {name: 'lastname', align: 'center', label: 'Nachname', field: 'lastname', sortable: true},
-      {name: 'phone', align: 'center', label: 'Telefon', field: 'phone', sortable: false},
-      {name: 'email', align: 'center', label: 'E-Mail', field: 'email', sortable: false},
-      {name: 'birthdate', align: 'center', label: 'Geburtsdatum', field: 'birthdate', sortable: true,},
-      {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: false,},
+      {name: 'name', align: 'center', label: 'Name', field: 'name', sortable: true},
+      {name: 'description', align: 'center', label: 'Beschreibung', field: 'description', sortable: false},
+      {name: 'status', align: 'center', label: 'Aktiv', field: 'status', sortable: true},
+      {name: 'date_start', align: 'center', label: 'Start', field: 'date_start', sortable: false},
+      {name: 'date_end', align: 'center', label: 'Ende', field: 'date_end', sortable: false},
+      {name: 'location', align: 'center', label: 'Ort', field: 'location', sortable: true,},
       {name: 'groups', align: 'center', label: 'Gruppen', field: 'groups', sortable: false,},
-      {name: 'hasRole', align: 'center', label: 'Rollen', field: 'roles', sortable: false,},
+      {name: 'athletes', align: 'center', label: 'Teilnehmer', field: 'athletes', sortable: false,},
+      {name: 'coaches', align: 'center', label: 'Trainer', field: 'coaches', sortable: false,},
       {name: 'actions', align: 'center', label: 'Aktionen', field: '', sortable: false,},
     ]
     const {result: rolesResult} = useQuery(rolesQuery);
     const {result: groupsResult} = useQuery(groupsQuery);
+    const {result: locationsResult} = useQuery(locationsQuery);
+    const {result: athletesResult} = useQuery(athletesQuery);
+    const {result: coachesResult} = useQuery(coachesQuery);
     const roles = computed(() => rolesResult.value?.roles ?? [])
     const roleToggleOptions = computed(() => {
         const options = [...roles.value.map(r => {
@@ -301,6 +342,9 @@ export default {
       return options
     })
     const groups = computed(() => groupsResult.value?.groups ?? [])
+    const locations = computed(() => locationsResult.value?.locations ?? [])
+    const athletes = computed(() => athletesResult.value?.users ?? [])
+    const coaches = computed(() => coachesResult.value?.users ?? [])
 
     const onRequest = (props) => {
       loading.value = true
@@ -339,14 +383,14 @@ export default {
       }
 
       apolloClient.query({
-        query: usersPaginationQuery,
+        query: trainingsPaginationQuery,
         variables: variables.value
       }).then(({data}) => {
           // update rowsCount with appropriate value
-          pagination.value.rowsNumber = data.usersPagination.paginatorInfo.total
+          pagination.value.rowsNumber = data.trainings.paginatorInfo.total
 
           // clear out existing data and add new
-          rows.value.splice(0, rows.value.length, ...data.usersPagination.data)
+          rows.value.splice(0, rows.value.length, ...data.trainings.data)
 
           // don't forget to update local pagination object
           pagination.value.page = page
@@ -362,106 +406,106 @@ export default {
       })
     }
 
-    const confirmDelete = (user) => {
+    const confirmDelete = (training) => {
           $q.dialog({
             title: 'Löschen Bestätigen',
-            message: 'Mitglied "' + user['id'] + ' - ' + user['firstname'] + ' ' + user['lastname'] + '" wirklich löschen?',
+            message: 'Mitglied "' + training['id'] + '" wirklich löschen?',
             cancel: true,
             html: true,
             persistent: true
           }).onOk(() => {
-            deleteUser(user)
+            deleteTraining(training)
           })
     }
-    const deleteUser = (user) => {
+    const deleteTraining = (training) => {
       loading.value = true
       apolloClient.mutate({
-        mutation: deleteUsersMutation,
-        variables: {id: user.id}
+        mutation: deleteTrainingsMutation,
+        variables: {id: training.id}
       }).then(({data}) => {
         $q.notify({
-            message: 'Benutzer ' + data.deleteUser.firstname + " " + data.deleteUser.lastname + ' gelöscht',
+            message: 'Training ' + data.deleteTraining.id + ' gelöscht',
             color: 'positive'})
-        const index = rows.value.indexOf(user);
+        const index = rows.value.indexOf(training);
         if (index > -1) { // only splice array when item is found
             rows.value.splice(index, 1); // 2nd parameter means remove one item only
         }
       }).catch(() => {
         $q.notify({
-            message: 'Benutzer ' + user.firstname + " " + user.lastname + ' konnte nicht gelöscht werden',
+            message: 'Training ' + training.id + ' konnte nicht gelöscht werden',
             color: 'negative'})
       }).finally(() => {
           loading.value = false
       })
     }
 
-    const updateUser = (userId, field, value) => {
+    const updateTraining = (trainingId, field, value) => {
       loading.value = true;
       apolloClient.mutate({
-        mutation: updateUsersMutation,
-        variables: {id: userId, [field]: value}
+        mutation: updateTrainingsMutation,
+        variables: {id: trainingId, [field]: value}
       }).then(({data}) => {
           $q.notify({
-              message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
+              message: 'Training ' + data.updateTraining.id + ' aktualisiert',
               color: 'positive'})
-          const index = rows.value.findIndex(row => row.id == data.updateUser.id);
+          const index = rows.value.findIndex(row => row.id == data.updateTraining.id);
           if (index > -1) { // only splice array when item is found
-              rows.value[index] = data.updateUser
+              rows.value[index] = data.updateTraining
           }
       }).catch(() => {
           $q.notify({
-              message: 'Benutzer konnte nicht aktualisiert werden',
+              message: 'Training konnte nicht aktualisiert werden',
               color: 'negative'})
       }).finally(() => {
           loading.value = false;
       })
     }
 
-    const addAthleteRole = (user) => {
+    const addAthleteRole = (training) => {
         loading.value = true;
-        const existingRoles = [...user.roles].map(role => role.id);
+        const existingRoles = [...training.roles].map(role => role.id);
         existingRoles.push(3);
         apolloClient.mutate({
-            mutation: updateUsersMutation,
-            variables: {id: user.id, 'roles': existingRoles}
+            mutation: updateTrainingsMutation,
+            variables: {id: training.id, 'roles': existingRoles}
         }).then(({data}) => {
             $q.notify({
-                message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
+                message: 'Training ' + data.updateTraining.id + ' aktualisiert',
                 color: 'positive'})
-            const index = rows.value.findIndex(row => row.id == data.updateUser.id);
+            const index = rows.value.findIndex(row => row.id == data.updateTraining.id);
             if (index > -1) { // only splice array when item is found
-                rows.value[index] = data.updateUser
+                rows.value[index] = data.updateTraining
             }
         }).catch(() => {
             $q.notify({
-                message: 'Benutzer konnte nicht aktualisiert werden',
+                message: 'Training konnte nicht aktualisiert werden',
                 color: 'negative'})
         }).finally(() => {
             loading.value = false;
         })
 
     }
-    const removeAthleteRole = (user) => {
+    const removeAthleteRole = (training) => {
         loading.value = true;
-        const existingRoles = [...user.roles].map(role => role.id);
+        const existingRoles = [...training.roles].map(role => role.id);
         const index = existingRoles.indexOf("3");
         if (index > -1) {
             existingRoles.splice(index, 1);
         }
         apolloClient.mutate({
-            mutation: updateUsersMutation,
-            variables: {id: user.id, 'roles': existingRoles}
+            mutation: updateTrainingsMutation,
+            variables: {id: training.id, 'roles': existingRoles}
         }).then(({data}) => {
             $q.notify({
-                message: 'Benutzer ' + data.updateUser.firstname + " " + data.updateUser.lastname + ' aktualisiert',
+                message: 'Training ' + data.updateTraining.id + ' aktualisiert',
                 color: 'positive'})
-            const index = rows.value.findIndex(row => row.id == data.updateUser.id);
+            const index = rows.value.findIndex(row => row.id == data.updateTraining.id);
             if (index > -1) { // only splice array when item is found
-                rows.value[index] = data.updateUser
+                rows.value[index] = data.updateTraining
             }
         }).catch(() => {
             $q.notify({
-                message: 'Benutzer konnte nicht aktualisiert werden',
+                message: 'Training konnte nicht aktualisiert werden',
                 color: 'negative'})
         }).finally(() => {
             loading.value = false;
@@ -482,13 +526,14 @@ export default {
       approvedToggle,
       roleToggle,
       groupToggle,
+      locations,
       loading,
       onRequest,
       pagination,
       columns,
-      deleteUser,
+      deleteTraining,
       confirmDelete,
-      updateUser,
+      updateTraining,
       removeAthleteRole,
       addAthleteRole,
       filterCol,
@@ -496,8 +541,9 @@ export default {
       roleToggleOptions,
       groupToggleOptions,
       groups,
+      athletes,
+      coaches,
       date,
-      computed,
     }
   },
 }

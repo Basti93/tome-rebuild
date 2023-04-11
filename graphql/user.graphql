@@ -45,6 +45,14 @@ input UpdateMeInput @validator(class: "App\\GraphQL\\Validators\\UpdateMeInputVa
 
 "Indicates what fields are available at the top level of a query operation."
 type Query @guard {
+    "Get all users."
+    users(
+        hasRole: _ @whereHasConditions(relation: "roles", columns: ["id", "name"])
+        hasGroup: _ @whereHasConditions(relation: "groups", columns: ["id", "name"])
+        approved: Boolean @scope
+        orderBy: _ @orderBy(columns: ["firstname", "lastname", "nickname"])
+    ): [User!]! @all @can(ability: "viewAny")
+
     "Find a single user by an identifying attribute."
     user(
         "Search by primary key."
@@ -54,8 +62,8 @@ type Query @guard {
         email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
     ): User @find
 
-    "List multiple users."
-    users(
+    "List multiple users with pagination."
+    usersPagination(
         "Filters. Accepts SQL LIKE wildcards `%` and `_`."
         firstname: String @where(operator: "like")
         lastname: String @where(operator: "like")

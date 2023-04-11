@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Group;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -33,9 +32,13 @@ class UserFactory extends Factory
         ];
     }
 
-    public function configure() {
-        return $this->afterCreating(function (User $user) {
+    public function configure(): static
+    {
+        return $this->afterMaking(function (User $user) {
+            // ...
+        })->afterCreating(function (User $user) {
             $user->groups()->attach(Group::inRandomOrder()->take(random_int(1, 3))->pluck('id'));
+            $user->assignRole('athlete');
         });
     }
 

@@ -8,6 +8,7 @@ scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 #import user.graphql
 #import group.graphql
 #import location.graphql
+#import training.graphql
 #import sanctum.graphql
 
 

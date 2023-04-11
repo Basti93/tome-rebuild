@@ -105,6 +105,11 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         return $this->belongsToMany(Group::class, 'groups_users');
     }
 
+    public function trainings(): BelongsToMany
+    {
+        return $this->belongsToMany(Training::class, 'trainings_users');
+    }
+
     public function prunable()
     {
         return static::where('deleted_at', '<=', now()->subMonths(1));

@@ -1,0 +1,14 @@
+query getCoaches {
+    users(
+        hasRole: {
+            column: NAME,
+            value: "coach"
+        }
+) {
+        id
+        firstname
+        lastname
+        nickname
+        imageUrl
+    }
+}
