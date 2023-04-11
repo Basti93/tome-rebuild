@@ -4,10 +4,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use \Spatie\Permission\Models\Role as SpatieRole;
+use Spatie\Permission\Traits\HasPermissions;
 
 class Role extends SpatieRole
 {
-    use HasFactory;
+    use HasFactory, HasPermissions;
 
     /**
      * The "booted" method of the model.

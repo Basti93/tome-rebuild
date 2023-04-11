@@ -64,8 +64,8 @@ class PermissionSeeder extends Seeder
         $this->sync($admin, $rolePermission);
         $this->sync($admin, $groupPermission);
         $this->sync($admin, $editGroupPermission);
-        $this->sync($trainer, $locationPermission);
-        $this->sync($trainer, $editLocationPermission);
+        $this->sync($admin, $locationPermission);
+        $this->sync($admin, $editLocationPermission);
         $this->sync($admin, $editConfigPermission);
         $this->sync($admin, $configPermission);
 

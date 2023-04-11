@@ -1,4 +1,10 @@
-type Role @guard{
+type Role @guard {
+    id: ID!
+    name: String
+    permissions: [Permission!]! @belongsToMany
+}
+
+type Permission @guard{
     id: ID!
     name: String
 }

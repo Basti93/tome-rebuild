@@ -11,6 +11,10 @@ query me {
         imageUrl
         roles {
             name
+            permissions {
+                name
+            }
         }
+
     }
 }

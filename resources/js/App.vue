@@ -88,28 +88,28 @@ export default {
         label: 'Mitglieder',
         separator: false,
         to: "/users",
-        show: computed(() => showMenuItem(loggedIn, true, true))
+        show: computed(() => showMenuItem(loggedIn, true, true) && hasPermission(me.value, 'edit-user'))
       },
       {
         icon: 'groups',
         label: 'Gruppen',
         separator: false,
         to: "/groups",
-        show: computed(() => showMenuItem(loggedIn, true, true))
+        show: computed(() => showMenuItem(loggedIn, true, true) && hasPermission(me.value, 'edit-group'))
       },
       {
         icon: 'pin_drop',
         label: 'Orte',
         separator: false,
         to: "/locations",
-        show: computed(() => showMenuItem(loggedIn, true, true))
+        show: computed(() => showMenuItem(loggedIn, true, true)  && hasPermission(me.value, 'edit-location'))
       },
       {
         icon: 'settings',
         label: 'App-Konfiguration',
         separator: false,
         to: "/configs",
-        show: computed(() => showMenuItem(loggedIn, true, true))
+        show: computed(() => showMenuItem(loggedIn, true, true)  && hasPermission(me.value, 'edit-config'))
       },
       {
         icon: 'login',
@@ -144,6 +144,21 @@ export default {
     $q.dark.set('auto')
 
 
+
+    const hasPermission = (user, permission) => {
+      if (user.roles) {
+          for (const role of user.roles) {
+              if (role.permissions) {
+                  for (const p of role.permissions) {
+                      if (p.name === permission) {
+                          return true;
+                      }
+                  }
+              }
+          }
+      }
+      return false;
+    }
 
     const updateLoginState = () => {
         loggedIn.value = localStorage.getItem('accessToken') !== null;
@@ -201,6 +216,7 @@ export default {
       loggedIn,
       fetchConfigs,
       updateLoginState,
+      hasPermission,
       toggleLeftDrawer() {
         leftDrawerOpen.value = !leftDrawerOpen.value
       }
