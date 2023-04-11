@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('lastname');
             $table->string('nickname')->nullable();
             $table->date('birthdate');
-            $table->string('phone')->nullable();
+            $table->string('phone');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

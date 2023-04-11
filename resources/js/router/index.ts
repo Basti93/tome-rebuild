@@ -9,9 +9,9 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
     if (
         // make sure the user is authenticated
-        //!isAuthenticated &&
-        // Avoid an infinite redirect
-        localStorage.getItem('accessToken') == null && to.name !== 'Login' && to.name !== 'Register' && to.name !== 'VerifyEmail' && to.name !== 'ForgotPassword' && to.name !== 'ResetPassword'
+        // and the route they are trying to access is not the login page or any other public page
+        localStorage.getItem('accessToken') == null
+        && ['Login', 'Register', 'ForgotPassword', 'VerifyEmail', 'ResetPassword'].indexOf(to.name) === -1
     ) {
         // redirect the user to the login page
         return { name: 'Login', query: { redirect: to.path} }

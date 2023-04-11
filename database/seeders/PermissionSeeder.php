@@ -40,6 +40,12 @@ class PermissionSeeder extends Seeder
         $editGroupPermission[] = Permission::updateOrCreate(['id' => 11], ['name' => 'edit-group']);
         $groupPermission[] = Permission::updateOrCreate(['id' => 12], ['name' => 'view-group']);
 
+        $editLocationPermission[] = Permission::updateOrCreate(['id' => 13], ['name' => 'edit-location']);
+        $locationPermission[] = Permission::updateOrCreate(['id' => 14], ['name' => 'view-location']);
+
+        $editConfigPermission[] = Permission::updateOrCreate(['id' => 15], ['name' => 'edit-config']);
+        $configPermission[] = Permission::updateOrCreate(['id' => 16], ['name' => 'view-config']);
+
 
         $this->sync($trainer, $trainerRolePermission);
         $this->sync($trainer, $userPermission);
@@ -47,6 +53,9 @@ class PermissionSeeder extends Seeder
         $this->sync($trainer, $rolePermission);
         $this->sync($trainer, $groupPermission);
         $this->sync($trainer, $editGroupPermission);
+        $this->sync($trainer, $locationPermission);
+        $this->sync($trainer, $editLocationPermission);
+        $this->sync($trainer, $configPermission);
 
         $this->sync($admin, $adminRolePermission);
         $this->sync($admin, $trainerRolePermission);
@@ -55,9 +64,15 @@ class PermissionSeeder extends Seeder
         $this->sync($admin, $rolePermission);
         $this->sync($admin, $groupPermission);
         $this->sync($admin, $editGroupPermission);
+        $this->sync($trainer, $locationPermission);
+        $this->sync($trainer, $editLocationPermission);
+        $this->sync($admin, $editConfigPermission);
+        $this->sync($admin, $configPermission);
 
         $this->sync($athlete, $userPermission);
         $this->sync($athlete, $groupPermission);
+        $this->sync($trainer, $locationPermission);
+        $this->sync($athlete, $configPermission);
 
         User::whereEmail(env('MAIL_FROM_ADMIN'))->first()->assignRole('admin');
         if (env('APP_DEBUG')) {

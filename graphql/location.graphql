@@ -1,0 +1,34 @@
+type Location @guard{
+    id: ID!
+    name: String
+}
+
+input LocationInput {
+    name: String
+}
+
+extend type Query @guard {
+    "Get all locations."
+    locations: [Location!]! @all @can(ability: "viewAny")
+
+    "Find a single location by an identifying attribute."
+    location(
+        "Search by primary key."
+        id: ID! @eq
+    ): Location @find @can(ability: "view")
+
+    "List multiple locations."
+    locationsPaginate(
+        "Filters. Accepts SQL LIKE wildcards `%` and `_`."
+        name: String @where(operator: "like")
+        orderBy: _ @orderBy(columns: ["id", "name"])
+    ): [Location!]! @can(ability: "viewAny") @paginate(defaultCount: 25) @softDeletes
+
+}
+
+extend type Mutation @guard {
+    createLocation(input: LocationInput  @spread): Location! @can(ability: "create") @create
+    updateLocation(id: ID!, input: LocationInput  @spread): Location! @can(ability: "update") @update
+    deleteLocation(id: ID! @where(operator: "=")): Location @delete @can(ability: "delete", find: "id")
+}
+

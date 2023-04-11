@@ -50,7 +50,7 @@
                   type="tel"
                   v-model="phone"
                   hint="Bei Kindern bitte die Nummer der Eltern für Notfälle"
-                  label="Telefonummer"
+                  label="Telefonummer*"
               ></q-input>
               <q-input
                   type="email"

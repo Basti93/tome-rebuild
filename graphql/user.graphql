@@ -8,7 +8,7 @@ type User {
     lastname: String!
     birthdate: DateTime!
     created_at: DateTime!
-    phone: String
+    phone: String!
     email: String!
     image: String
     imageUrl: String
@@ -72,7 +72,7 @@ type Query @guard {
 
 extend type Mutation @guard {
     "Update the authenticated user."
-    updateMe(input: UpdateMeInput  @spread): User! @can(ability: "updateMe") @update
+    updateMe(input: UpdateMeInput  @spread): User! @can(ability: "updateMe", injectArgs: true, model: "App\\Models\\User") @update
     "Update a user by ID."
     updateUser(id: ID!, input: UserInput  @spread): User! @can(ability: "update", injectArgs: true, model: "App\\Models\\User") @field(resolver: "\\App\\GraphQL\\Mutations\\UpdateUser")
     "Delete a user by ID."

@@ -1,6 +1,7 @@
-import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core'
+import {ApolloClient, from, InMemoryCache} from '@apollo/client/core'
 import { setContext } from 'apollo-link-context';
 import { createUploadLink } from 'apollo-upload-client'
+import { onError } from "@apollo/client/link/error";
 
 // XSRF token is required to make post requests to your Laravel backend
 const authLink = setContext((_, { headers }) => {
@@ -12,6 +13,21 @@ const authLink = setContext((_, { headers }) => {
             authorization: 'Bearer ' + token || ''
         },
     };
+});
+
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+    if (graphQLErrors) {
+        graphQLErrors.forEach(({ message, locations, path }) =>
+            console.log(
+                `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+            )
+        );
+        if (graphQLErrors.some(e => e.message === 'Unauthenticated.')) {
+            localStorage.removeItem('accessToken')
+            window.location.href = '/#/login'
+        }
+    }
+    if (networkError) console.log(`[Network error]: ${networkError}`);
 });
 
 // HTTP connection to the API
@@ -26,7 +42,7 @@ const cache = new InMemoryCache({
 
 // Create the apollo client
 const apolloClient = new ApolloClient({
-    link: authLink.concat(httpLink),
+    link: from([errorLink, authLink.concat(httpLink)]),
     cache,
 })
 

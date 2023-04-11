@@ -1,0 +1,17 @@
+query getLocationPagination ($first: Int!, $page: Int!, $orderBy: [QueryLocationsPaginateOrderByOrderByClause!], $name: String) {
+    locationsPaginate(first: $first, page: $page, orderBy: $orderBy, name: $name) {
+        paginatorInfo {
+            total
+            currentPage
+            hasMorePages
+            lastItem
+            lastPage
+            perPage
+            count
+        }
+        data {
+            id
+            name
+        }
+    }
+}

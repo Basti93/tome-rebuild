@@ -1,7 +1,8 @@
 <template>
   <q-page>
-      <div class="row full-height full-width q-pa-md">
+      <div class="row q-ma-md">
         <q-table
+            class="col-12"
             ref="tableRef"
             title="Users"
             :rows="rows"
@@ -143,6 +144,11 @@
                   </q-input>
                 </q-popup-edit>
               </q-td>
+              <q-td key="phone" :props="props">
+                  <p><a :href="'tel:' + props.row.phone"><q-icon name="phone"/>{{props.row.phone}}</a></p>
+                  <p><a :href="'https://wa.me/' + props.row.phone">Whatsapp</a></p>
+              </q-td>
+              <q-td key="email" :props="props"><a :href="'mailto:' + props.row.email">{{props.row.email}}</a></q-td>
               <q-td key="birthdate" :props="props">{{ date.formatDate(props.row.birthdate, 'DD.MM.YYYY') }}
                 <q-popup-edit :model-value="props.row.birthdate" v-slot="scope" @save="(value) => updateUser(props.row.id, 'birthdate', value)">
                   <q-input type="date" :v-model="scope.value" mask="date" :rules="[val => !val || /^-?[\d]+\.[0-1]\d\.[0-3]\d$/.test(val) || 'Falsches Format']" dense autofocus @keyup.enter="scope.set">
@@ -255,6 +261,8 @@ export default {
       {name: 'nickname', align: 'center', label: 'Spitzname', field: 'nickname', sortable: true},
       {name: 'firstname', align: 'center', label: 'Vorname', field: 'firstname', sortable: true},
       {name: 'lastname', align: 'center', label: 'Nachname', field: 'lastname', sortable: true},
+      {name: 'phone', align: 'center', label: 'Telefon', field: 'phone', sortable: false},
+      {name: 'email', align: 'center', label: 'E-Mail', field: 'email', sortable: false},
       {name: 'birthdate', align: 'center', label: 'Geburtsdatum', field: 'birthdate', sortable: true,},
       {name: 'approved', align: 'center', label: 'Freigeschaltet', field: 'approved', sortable: false,},
       {name: 'groups', align: 'center', label: 'Gruppen', field: 'groups', sortable: false,},

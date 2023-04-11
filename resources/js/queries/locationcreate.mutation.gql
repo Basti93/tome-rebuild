@@ -1,0 +1,10 @@
+mutation createLocation (
+    $name: String!,
+) {
+    createLocation(input: {
+        name: $name,
+    }) {
+        id
+        name
+    }
+}

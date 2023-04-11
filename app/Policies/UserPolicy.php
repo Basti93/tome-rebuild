@@ -43,9 +43,9 @@ class UserPolicy
         return $user->hasPermissionTo('edit-user');
     }
 
-    public function updateMe(User $user, User $model): bool
+    public function updateMe(User $user, $args): bool
     {
-        if ($user->id != $model->id) {
+        if ($user->id != $args['id']) {
             return false;
         }
         return true;

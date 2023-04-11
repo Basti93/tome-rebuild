@@ -1,0 +1,11 @@
+mutation updateLocation (
+    $id: ID!,
+    $name: String,
+) {
+    updateLocation(id: $id, input: {
+        name: $name,
+    }) {
+        id
+        name
+    }
+}

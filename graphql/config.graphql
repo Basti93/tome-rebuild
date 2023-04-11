@@ -1,0 +1,35 @@
+type Config @guard{
+    id: ID!
+    key: String!
+    value: String!
+}
+
+input ConfigInput {
+    value: String!
+}
+
+extend type Query @guard {
+    "Get all configs."
+    configs: [Config!]! @all @can(ability: "viewAny")
+
+    "Find a single config by an identifying attribute."
+    config(
+        "Search by primary key."
+        id: ID! @eq @rules(apply: ["prohibits:key", "required_without:key"])
+        key: String! @eq @rules(apply: ["prohibits:id", "required_without:id"])
+    ): Config @find @can(ability: "view")
+
+    "List multiple groups."
+    configsPaginate(
+        "Filters. Accepts SQL LIKE wildcards `%` and `_`."
+        value: String @where(operator: "like")
+        key: String @where(operator: "like")
+        orderBy: _ @orderBy(columns: ["id", "key", "value"])
+    ): [Config!]! @can(ability: "viewAny") @paginate(defaultCount: 25) @softDeletes
+
+}
+
+extend type Mutation @guard {
+    updateConfig(id: ID!, input: ConfigInput  @spread): Config! @can(ability: "update") @update
+}
+

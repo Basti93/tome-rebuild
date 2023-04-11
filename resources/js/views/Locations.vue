@@ -4,7 +4,7 @@
         <q-table
             class="col-12"
             ref="tableRef"
-            title="Groups"
+            title="Locations"
             :rows="rows"
             :columns="columns"
             row-key="id"
@@ -18,16 +18,16 @@
           <template v-slot:top>
                 <div class="row full-width">
                     <div class="col">
-                        <p class="text-h4">Gruppen</p>
+                        <p class="text-h4">Orte</p>
                         <p class="text-subtitle-1">Zum Editieren auf die Zeilen klicken</p>
                     </div>
                     <div class="col">
                         <q-btn
                             class="float-right"
                             color="primary"
-                            label="Neue Gruppe"
-                            icon="group_add"
-                            @click="showNewGroupDialog = true"
+                            label="Neuer Ort"
+                            icon="add"
+                            @click="showNewLocationDialog = true"
                         />
                     </div>
                 </div>
@@ -37,7 +37,7 @@
             <q-tr :props="props">
               <q-td key="id" :props="props">{{ props.row.id }}</q-td>
               <q-td key="name" :props="props">{{ props.row.name }}
-                <q-popup-edit :model-value="props.row.name" v-slot="scope" @save="(value) => updateGroup(props.row.id, 'name', value)">
+                <q-popup-edit :model-value="props.row.name" v-slot="scope" @save="(value) => updateLocation(props.row.id, 'name', value)">
                   <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
                     <template v-slot:after>
                       <q-btn
@@ -58,8 +58,8 @@
                   <q-btn round flat icon="more_vert">
                   <q-menu auto-close v-ripple >
                       <q-item clickable @click="confirmDelete(props.row)">
-                          <q-item-section avatar><q-icon name="group_remove"/></q-item-section>
-                          <q-item-section>Gruppe Löschen</q-item-section>
+                          <q-item-section avatar><q-icon name="delete"/></q-item-section>
+                          <q-item-section>Löschen</q-item-section>
                       </q-item>
                   </q-menu>
                   </q-btn>
@@ -70,14 +70,14 @@
         </q-table>
       </div>
   </q-page>
-    <q-dialog v-model="showNewGroupDialog" persistent>
+    <q-dialog v-model="showNewLocationDialog" persistent>
         <q-card>
             <q-card-section class="row items-center">
-                <div class="text-h6">Neue Gruppe</div>
+                <div class="text-h6">Neuer Ort</div>
             </q-card-section>
 
             <q-card-section>
-                <q-form @submit="createGroup(editName)">
+                <q-form @submit="createLocation(editName)">
                     <q-input
                         v-model="editName"
                         label="Name"
@@ -86,7 +86,7 @@
                         :rules="[val => val.length > 0 || 'Bitte einen Namen eingeben']"
                     />
                     <div class="row justify-end q-mt-sm">
-                        <q-btn label="Abbrechen" color="primary" flat @click="showNewGroupDialog = false" />
+                        <q-btn label="Abbrechen" color="primary" flat @click="showNewLocationDialog = false" />
                         <q-btn label="Speichern" color="primary" type="submit" />
                     </div>
                 </q-form>
@@ -96,10 +96,10 @@
 </template>
 <script>
 
-import groupsPaginationQuery from "../queries/grouppagination.query.gql";
-import deleteGroupMutation from "../queries/groupdelete.mutation.gql";
-import createGroupMutation from "../queries/groupcreate.mutation.gql";
-import updateGroupsMutation from "../queries/groupupdate.mutation.gql";
+import locationsPaginationQuery from "../queries/locationpagination.query.gql";
+import deleteLocationMutation from "../queries/locationdelete.mutation.gql";
+import createLocationMutation from "../queries/locationcreate.mutation.gql";
+import updateLocationsMutation from "../queries/locationupdate.mutation.gql";
 import { onMounted, ref} from "vue";
 import apolloClient from "../apollo";
 import {date} from 'quasar'
@@ -116,7 +116,7 @@ export default {
     const approvedToggle = ref('all');
     const rows = ref([])
     const loading = ref(false)
-    const showNewGroupDialog = ref(false)
+    const showNewLocationDialog = ref(false)
     const pagination = ref({
       sortBy: 'id',
       descending: true,
@@ -158,14 +158,14 @@ export default {
       }
 
       apolloClient.query({
-        query: groupsPaginationQuery,
+        query: locationsPaginationQuery,
         variables: variables.value
       }).then(({data}) => {
           // update rowsCount with appropriate value
-          pagination.value.rowsNumber = data.groupsPaginate.paginatorInfo.total
+          pagination.value.rowsNumber = data.locationsPaginate.paginatorInfo.total
 
           // clear out existing data and add new
-          rows.value.splice(0, rows.value.length, ...data.groupsPaginate.data)
+          rows.value.splice(0, rows.value.length, ...data.locationsPaginate.data)
 
           // don't forget to update local pagination object
           pagination.value.page = page
@@ -181,76 +181,76 @@ export default {
       })
     }
 
-    const createGroup = (name) => {
+    const createLocation = (name) => {
       loading.value = true
       apolloClient.mutate({
-        mutation: createGroupMutation,
+        mutation: createLocationMutation,
         variables: {name: name}
       }).then(({data}) => {
         $q.notify({
-            message: 'Gruppe ' + data.createGroup.name + ' erstellt',
+            message: 'Ort ' + data.createLocation.name + ' erstellt',
             color: 'positive'})
-        rows.value.unshift(data.createGroup)
+        rows.value.unshift(data.createLocation)
         editName.value = ''
-        showNewGroupDialog.value = false
+        showNewLocationDialog.value = false
       }).catch(() => {
           $q.notify({
-              message: 'Gruppe konnte nicht erstellt werden',
+              message: 'Ort konnte nicht erstellt werden',
               color: 'negative'})
       }).finally(() => {
           loading.value = false
       })
     }
 
-    const confirmDelete = (group) => {
+    const confirmDelete = (location) => {
           $q.dialog({
             title: 'Löschen Bestätigen',
-            message: 'Gruppe "' + group['id'] + ' - ' + group['name'] + '" wirklich löschen?',
+            message: 'Ort "' + location['id'] + ' - ' + location['name'] + '" wirklich löschen?',
             cancel: true,
             html: true,
             persistent: true
           }).onOk(() => {
-            deleteGroup(group)
+            deleteLocation(location)
           })
     }
-    const deleteGroup = (group) => {
+    const deleteLocation = (location) => {
       loading.value = true
       apolloClient.mutate({
-        mutation: deleteGroupMutation,
-        variables: {id: group.id}
+        mutation: deleteLocationMutation,
+        variables: {id: location.id}
       }).then(({data}) => {
         $q.notify({
-            message: 'Gruppe ' + data.deleteGroup.name + ' gelöscht',
+            message: 'Ort ' + data.deleteLocation.name + ' gelöscht',
             color: 'positive'})
-        const index = rows.value.indexOf(group);
+        const index = rows.value.indexOf(location);
         if (index > -1) { // only splice array when item is found
             rows.value.splice(index, 1); // 2nd parameter means remove one item only
         }
       }).catch(() => {
         $q.notify({
-            message: 'Gruppe ' + group.name + ' konnte nicht gelöscht werden',
+            message: 'Ort ' + location.name + ' konnte nicht gelöscht werden',
             color: 'negative'})
       }).finally(() => {
           loading.value = false
       })
     }
 
-    const updateGroup = (groupId, field, value) => {
+    const updateLocation = (locationId, field, value) => {
       loading.value = true;
       apolloClient.mutate({
-        mutation: updateGroupsMutation,
-        variables: {id: groupId, [field]: value}
+        mutation: updateLocationsMutation,
+        variables: {id: locationId, [field]: value}
       }).then(({data}) => {
           $q.notify({
-              message: 'Gruppe ' + data.updateGroup.name + ' aktualisiert',
+              message: 'Ort ' + data.updateLocation.name + ' aktualisiert',
               color: 'positive'})
-          const index = rows.value.findIndex(row => row.id == data.updateGroup.id);
+          const index = rows.value.findIndex(row => row.id == data.updateLocation.id);
           if (index > -1) { // only splice array when item is found
-              rows.value[index] = data.updateGroup
+              rows.value[index] = data.updateLocation
           }
       }).catch(() => {
           $q.notify({
-              message: 'Gruppe konnte nicht aktualisiert werden',
+              message: 'Ort konnte nicht aktualisiert werden',
               color: 'negative'})
       }).finally(() => {
           loading.value = false;
@@ -269,14 +269,14 @@ export default {
       tableRef,
       approvedToggle,
       loading,
-      showNewGroupDialog,
+      showNewLocationDialog,
       onRequest,
       pagination,
       columns,
-      createGroup,
-      deleteGroup,
+      createLocation,
+      deleteLocation,
       confirmDelete,
-      updateGroup,
+      updateLocation,
       filterCol,
       editName,
       date,

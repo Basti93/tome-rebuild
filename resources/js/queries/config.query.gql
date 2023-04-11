@@ -1,0 +1,7 @@
+query getConfigs {
+    configs {
+        id
+        key
+        value
+    }
+}

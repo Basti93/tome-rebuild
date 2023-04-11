@@ -1,0 +1,12 @@
+mutation updateConfig (
+    $id: ID!,
+    $value: String!,
+) {
+    updateConfig(id: $id, input: {
+        value: $value,
+    }) {
+        id
+        key
+        value
+    }
+}

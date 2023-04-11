@@ -3,7 +3,7 @@ mutation updateMe (
     $firstname: String!,
     $lastname: String!,
     $nickname: String,
-    $phone: String,
+    $phone: String!,
     $birthdate: Date!,
     $email: String!,
 ) {

@@ -42,7 +42,10 @@ class UploadProfileImage
         ->save(Storage::disk('public')->path($newImage));
         $user->image = $newImage;
         $user->save();
-        Storage::disk('public')->delete($oldImage);
+
+        if ($oldImage != null && Storage::disk('public')->exists($oldImage)) {
+            Storage::disk('public')->delete($oldImage);
+        }
         return $user->image;
     }
 

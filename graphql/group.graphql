@@ -15,7 +15,7 @@ extend type Query @guard {
     group(
         "Search by primary key."
         id: ID! @eq
-    ): User @find @can(ability: "view")
+    ): Group @find @can(ability: "view")
 
     "List multiple groups."
     groupsPaginate(

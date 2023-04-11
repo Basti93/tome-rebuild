@@ -1,0 +1,18 @@
+query getConfigPagination ($first: Int!, $page: Int!, $orderBy: [QueryConfigsPaginateOrderByOrderByClause!], $key: String) {
+    configsPaginate(first: $first, page: $page, orderBy: $orderBy, key: $key) {
+        paginatorInfo {
+            total
+            currentPage
+            hasMorePages
+            lastItem
+            lastPage
+            perPage
+            count
+        }
+        data {
+            id
+            key
+            value
+        }
+    }
+}

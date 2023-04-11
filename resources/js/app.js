@@ -14,6 +14,7 @@ import '@quasar/extras/material-icons/material-icons.css'
 
 // Import Quasar css
 import 'quasar/src/css/index.sass'
+import "quasar/src/css/flex-addon.sass";
 
 createApp({
     name: 'T.O.M.E. Rebuild',
@@ -24,4 +25,7 @@ createApp({
 }).use(router).use(Quasar, {
     plugins: {Notify, Dialog, Dark}, // import Quasar plugins and add here
     lang: quasarLang,
+    config: {
+        cssAddon: true,
+    }
 }).mount('#app')

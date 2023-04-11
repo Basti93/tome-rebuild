@@ -21,6 +21,7 @@ class UserTableSeeder extends Seeder
                 'id' => 1,
                 'firstname' => 'Admin',
                 'lastname' => 'Testuser',
+                'phone' => '8123012313',
                 'email' => env('MAIL_FROM_ADMIN'),
             ],
         ];
@@ -30,6 +31,7 @@ class UserTableSeeder extends Seeder
                 'id' => 2,
                 'firstname' => 'Trainer',
                 'lastname' => 'Testuser',
+                'phone' => '8123012313',
                 'email' => env('MAIL_FROM_TEST_TRAINER'),
             ];
 
@@ -37,6 +39,7 @@ class UserTableSeeder extends Seeder
                 'id' => 3,
                 'firstname' => 'Benutzer',
                 'lastname' => 'Testuser',
+                'phone' => '8123012313',
                 'email' => env('MAIL_FROM_TEST_USER'),
             ];
 
@@ -44,6 +47,7 @@ class UserTableSeeder extends Seeder
                 'id' => 4,
                 'firstname' => 'NoPermission',
                 'lastname' => 'Testuser',
+                'phone' => '8123012313',
                 'email' => env('MAIL_FROM_NO_PERMISSION'),
             ];
         }
@@ -55,6 +59,7 @@ class UserTableSeeder extends Seeder
                     'firstname' => $user['firstname'],
                     'lastname' => $user['lastname'],
                     'email' => $user['email'],
+                    'phone' => $user['phone'],
                     'birthdate' => now(),
                     'password' => Hash::make('password'),
                     'remember_token' => Str::random(10),

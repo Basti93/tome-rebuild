@@ -1,147 +1,132 @@
 <template>
   <q-page>
-      <q-card class="q-pa-lg-lg q-pa-sm full-width">
-          <q-card-section>
-              <div class="text-h4">Profil</div>
-          </q-card-section>
-        <div class="row">
-          <div class="col-12 col-lg-6">
-            <q-card class="q-ma-md-lg q-pa-md-lg q-ma-sm">
-                <q-card-section>
-                    <q-avatar class="q-ma-md-lg q-ma-sm" size="150px">
-                        <img v-if="me.imageUrl" :src="me.imageUrl">
-                        <img v-else src="../../img/boy-avatar.png">
-                    </q-avatar>
-                    <div class="text-h5">{{ me.firstname }} {{ me.lastname }}</div>
-                    <div class="text-h6">{{ me.nickname }}</div>
-                </q-card-section>
-                <q-form ref="uploadProfileImageForm" @submit.prevent="uploadProfileImage">
+      <div class="row q-ma-ma justify-center">
+        <q-card class="col-12 col-lg-3 q-mt-md">
                   <q-card-section>
+                      <q-avatar class="q-ma-md-lg q-ma-sm" size="150px">
+                          <img v-if="me.imageUrl" :src="me.imageUrl">
+                          <img v-else src="../../img/boy-avatar.png">
+                      </q-avatar>
+                      <div class="text-h5">{{ me.firstname }} {{ me.lastname }}</div>
+                      <div class="text-h6">{{ me.nickname }}</div>
+                  </q-card-section>
+                  <q-form ref="uploadProfileImageForm" @submit.prevent="uploadProfileImage">
+                    <q-card-section>
 
-                    <q-file
-                      filled
-                      bottom-slots
-                      v-model="profileImageUpload"
-                      label="Neues Profilbild hochladen"
-                      :hint="profileImageUpload ? profileImageUpload.name : 'Bitte wählen Sie ein Bild aus'"
-                      max-file-size="5242880"
-                      accept="image/*"
-                      max-files="1"
-                      counter>
-                        <template v-slot:prepend>
-                            <q-icon name="cloud_upload" @click.stop.prevent />
-                        </template>
-                        <template v-slot:append>
-                            <q-icon name="close" @click.stop.prevent="profileImageUpload = null" class="cursor-pointer" />
-                        </template>
-                        <template v-slot:hint>
-                            Maximal 5 MB
-                        </template>
-                      </q-file>
+                      <q-file
+                        filled
+                        bottom-slots
+                        v-model="profileImageUpload"
+                        label="Neues Profilbild hochladen"
+                        :hint="profileImageUpload ? profileImageUpload.name : 'Bitte wählen Sie ein Bild aus'"
+                        max-file-size="5242880"
+                        accept="image/*"
+                        max-files="1"
+                        counter>
+                          <template v-slot:prepend>
+                              <q-icon name="cloud_upload" @click.stop.prevent />
+                          </template>
+                          <template v-slot:append>
+                              <q-icon name="close" @click.stop.prevent="profileImageUpload = null" class="cursor-pointer" />
+                          </template>
+                          <template v-slot:hint>
+                              Maximal 5 MB
+                          </template>
+                        </q-file>
+                    </q-card-section>
+                    <q-card-actions>
+                        <q-btn type="submit" :disable="!profileImageUpload || profileImageUpload.length === 0" color="primary" label="Speichern" />
+                    </q-card-actions>
+                  </q-form>
+              </q-card>
+        <q-card class="col-12 col-lg-4 q-mt-md q-ml-lg-sm">
+                  <q-form @submit.prevent="updateMe" @reset="resetMe">
+                  <q-card-section>
+                      <q-input
+                        type="text"
+                        v-model="editMe.firstname"
+                        label="Vorname*"
+                        :rules="[val => val && val.length > 0 || 'Vorname darf nicht leer sein']"/>
+                      <q-input
+                        type="text"
+                        v-model="editMe.lastname"
+                        label="Nachname*"
+                        :rules="[val => val && val.length > 0 || 'Nachname darf nicht leer sein']"/>
+                      <q-input
+                        type="text"
+                        v-model="editMe.nickname"
+                        label="Spitzname" />
+                      <q-input
+                        type="email"
+                        v-model="editMe.email"
+                        label="E-Mail*"
+                        :rules="[val => val && val.length > 0 || 'E-Mail darf nicht leer sein']"/>
+                      <q-input
+                              label="Geburtsdatum*"
+                              v-model="formattedBirthdate"
+                              :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein']">
+                          <template v-slot:append>
+                              <q-icon name="event" class="cursor-pointer">
+                                  <q-popup-proxy
+                                    ref="proxyBirthdate"
+                                    transition-show="scale"
+                                    transition-hide="scale">
+                                    <q-date
+                                        minimal
+                                        v-model="formattedBirthdate"
+                                        @update:model-value="$refs.proxyBirthdate.hide()"
+                                        mask="DD.MM.YYYY">
+                                    </q-date>
+                                  </q-popup-proxy>
+                              </q-icon>
+                          </template>
+                      </q-input>
+                      <q-input
+                        type="text"
+                        v-model="editMe.phone"
+                        hint="Bei Kindern bitte die Nummer der Eltern für Notfälle"
+                        label="Telefonnummer*" />
+                      <p class="text-red" v-if="profileValidationErrors">{{profileValidationErrors}}</p>
                   </q-card-section>
                   <q-card-actions>
-                      <q-btn type="submit" :disable="!profileImageUpload || profileImageUpload.length === 0" color="primary" label="Speichern" />
+                      <q-btn type="submit" color="primary" block class="mt-2" :disabled="loading">Speichern</q-btn>
+                      <q-btn type="reset" block class="mt-2" :disabled="loading">Zurücksetzen</q-btn>
                   </q-card-actions>
-                </q-form>
-            </q-card>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-12 col-lg-6">
-            <q-card class="q-ma-md-lg q-pa-md-lg q-ma-sm">
-                <q-form @submit.prevent="updateMe" @reset="resetMe">
-                <q-card-section>
-                    <q-input
-                      type="text"
-                      v-model="editMe.firstname"
-                      label="Vorname*"
-                      :rules="[val => val && val.length > 0 || 'Vorname darf nicht leer sein']"/>
-                    <q-input
-                      type="text"
-                      v-model="editMe.lastname"
-                      label="Nachname*"
-                      :rules="[val => val && val.length > 0 || 'Nachname darf nicht leer sein']"/>
-                    <q-input
-                      type="text"
-                      v-model="editMe.nickname"
-                      label="Spitzname" />
-                    <q-input
-                      type="email"
-                      v-model="editMe.email"
-                      label="E-Mail*"
-                      :rules="[val => val && val.length > 0 || 'E-Mail darf nicht leer sein']"/>
-                    <q-input
-                            label="Geburtsdatum*"
-                            v-model="formattedBirthdate"
-                            :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein']">
-                        <template v-slot:append>
-                            <q-icon name="event" class="cursor-pointer">
-                                <q-popup-proxy
-                                  ref="proxyBirthdate"
-                                  transition-show="scale"
-                                  transition-hide="scale">
-                                  <q-date
-                                      minimal
-                                      v-model="formattedBirthdate"
-                                      @update:model-value="$refs.proxyBirthdate.hide()"
-                                      mask="DD.MM.YYYY">
-                                  </q-date>
-                                </q-popup-proxy>
-                            </q-icon>
-                        </template>
-                    </q-input>
-                    <q-input
-                      type="text"
-                      v-model="editMe.phone"
-                      hint="Bei Kindern bitte die Nummer der Eltern für Notfälle"
-                      label="Telefonnummer" />
-                    <p class="text-red" v-if="profileValidationErrors">{{profileValidationErrors}}</p>
-                </q-card-section>
-                <q-card-actions>
-                    <q-btn type="submit" color="primary" block class="mt-2" :disabled="loading">Speichern</q-btn>
-                    <q-btn type="reset" block class="mt-2" :disabled="loading">Zurücksetzen</q-btn>
-                </q-card-actions>
-                </q-form>
-            </q-card>
-          </div>
-      </div>
-        <div class="row">
-          <div class="col-12 col-lg-6">
-            <q-card class="q-ma-md-lg q-pa-md-lg q-ma-sm">
-              <q-card-section>
-                <div class="text-h6">Passwort ändern</div>
-              </q-card-section>
-              <q-card-section>
-                  <q-form ref="passwordForm" @submit.prevent="changePassword">
-                      <q-input
-                              type="password"
-                              v-model="current_password"
-                              label="Aktuelles Passwort"
-                              lazy-rules='ondemand'
-                              :rules="[ val => val && val.length > 0 || 'Bitte aktuelles Passwort eingeben']"
-                      ></q-input>
-                      <q-input
-                              type="password"
-                              v-model="password"
-                              label="Neues Passwort"
-                              lazy-rules='ondemand'
-                              :rules="[ val => val && val.length >= 8 || 'Passwort muss mindestens 8 Zeichen haben']"
-                      ></q-input>
-                      <q-input
-                              type="password"
-                              v-model="password_confirmation"
-                              label="Passwort bestätigen"
-                              lazy-rules='ondemand'
-                              :rules="[ val => val && val === password || 'Passwort muss identisch sein']"
-                      ></q-input>
-                      <q-btn type="submit" color="primary" class="mt-2" :disabled="loading">Passwort ändern</q-btn>
-                      <div v-if="passwordValidationErrors">{{passwordValidationErrors}}</div>
                   </q-form>
-              </q-card-section>
-            </q-card>
-          </div>
+              </q-card>
+        <q-card class="col-12 col-lg-3 q-mt-md q-ml-lg-sm">
+                <q-card-section>
+                  <div class="text-h6">Passwort ändern</div>
+                </q-card-section>
+                <q-card-section>
+                    <q-form ref="passwordForm" @submit.prevent="changePassword">
+                        <q-input
+                                type="password"
+                                v-model="current_password"
+                                label="Aktuelles Passwort"
+                                lazy-rules='ondemand'
+                                :rules="[ val => val && val.length > 0 || 'Bitte aktuelles Passwort eingeben']"
+                        ></q-input>
+                        <q-input
+                                type="password"
+                                v-model="password"
+                                label="Neues Passwort"
+                                lazy-rules='ondemand'
+                                :rules="[ val => val && val.length >= 8 || 'Passwort muss mindestens 8 Zeichen haben']"
+                        ></q-input>
+                        <q-input
+                                type="password"
+                                v-model="password_confirmation"
+                                label="Passwort bestätigen"
+                                lazy-rules='ondemand'
+                                :rules="[ val => val && val === password || 'Passwort muss identisch sein']"
+                        ></q-input>
+                        <q-btn type="submit" color="primary" class="mt-2" :disabled="loading">Passwort ändern</q-btn>
+                        <div v-if="passwordValidationErrors">{{passwordValidationErrors}}</div>
+                    </q-form>
+                </q-card-section>
+              </q-card>
       </div>
-      </q-card>
   </q-page>
 
 </template>

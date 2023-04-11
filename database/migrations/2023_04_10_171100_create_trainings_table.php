@@ -13,17 +13,13 @@ return new class extends Migration
     {
         Schema::create('trainings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('group_id')->constrained('groups');
-            $table->foreignId('user_id')->constrained('users');
-
-            $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->dateTimeTz('date_start');
             $table->dateTimeTz('date_end');
-
-            $table->softDeletes();
+            $table->foreignId('location_id')->constrained('locations');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

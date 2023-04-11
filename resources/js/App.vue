@@ -42,7 +42,12 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view @login="updateLoginState" @logout="updateLoginState" @userUpdated="updateLoginState"/>
+      <router-view
+              @login="updateLoginState"
+              @logout="updateLoginState"
+              @userUpdated="updateLoginState"
+              @configChanged="fetchConfigs"
+      />
     </q-page-container>
 
   </q-layout>
@@ -54,12 +59,13 @@ import {computed, reactive, ref} from "vue";
 import {useQuasar} from "quasar";
 import apolloClient from "./apollo";
 import meQuery from "./queries/me.query.gql";
+import configsQuery from "./queries/config.query.gql";
 
 export default {
   setup() {
     const $q = useQuasar()
     const leftDrawerOpen = ref(false)
-    const appName = import.meta.env.VITE_APP_NAME
+    const appName = ref(import.meta.env.VITE_APP_NAME)
     const me = ref({})
     const loggedIn = ref(false)
     const menuList = reactive([
@@ -89,6 +95,20 @@ export default {
         label: 'Gruppen',
         separator: false,
         to: "/groups",
+        show: computed(() => showMenuItem(loggedIn, true, true))
+      },
+      {
+        icon: 'pin_drop',
+        label: 'Orte',
+        separator: false,
+        to: "/locations",
+        show: computed(() => showMenuItem(loggedIn, true, true))
+      },
+      {
+        icon: 'settings',
+        label: 'App-Konfiguration',
+        separator: false,
+        to: "/configs",
         show: computed(() => showMenuItem(loggedIn, true, true))
       },
       {
@@ -140,7 +160,29 @@ export default {
             me.value = {};
         }
     }
+
+      function removeAppItemsFromLocalStorage() {
+          Object.keys(localStorage).forEach(function(key){
+              if (key.startsWith('TOME_')) {
+                  localStorage.removeItem(key);
+              }
+          })
+      }
+
+      const fetchConfigs = () => {
+        apolloClient.query({query: configsQuery})
+        .then(({data}) => {
+            data.configs.forEach(config => {
+                if (config.key === 'APP_NAME') {
+                    appName.value = config.value;
+                }
+                removeAppItemsFromLocalStorage();
+                localStorage.setItem('TOME_' + config.key, config.value);
+            })
+        })
+    }
     updateLoginState();
+    fetchConfigs();
 
     function showMenuItem(isLoggedIn, authNeeded, showLoggedIn) {
       if (isLoggedIn.value && showLoggedIn) {
@@ -157,6 +199,7 @@ export default {
       appName,
       me,
       loggedIn,
+      fetchConfigs,
       updateLoginState,
       toggleLeftDrawer() {
         leftDrawerOpen.value = !leftDrawerOpen.value
