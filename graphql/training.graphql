@@ -24,6 +24,47 @@ input TrainingInput {
     groups: [ID!]
 }
 
+input UpdateTrainingInput {
+    name: String
+    description: String
+    status: Boolean
+    date_start: DateTime
+    date_end: DateTime
+    location: UpdateTrainingLocationInput
+    athletes: UpdateTrainingUserInput
+    coaches: UpdateTrainingUserInput
+    groups: UpdateTrainingGroupInput
+}
+
+input UpdateTrainingLocationInput {
+    connect: ID
+}
+
+
+input UpdateTrainingUserInput {
+    sync: [ConnectTrainingUser!]
+    delete: [ID!]
+    connect: [ConnectTrainingUser!]
+    disconnect: [ID!]
+}
+
+input UpdateTrainingGroupInput {
+    sync: [ID!]
+    delete: [ID!]
+    connect: [ID!]
+    disconnect: [ID!]
+}
+
+input ConnectTrainingUser {
+    id: ID!
+    role: TrainingRole
+}
+
+enum TrainingRole {
+    athlete
+    coach
+}
+
 extend type Query @guard {
     "Find a single training by an identifying attribute."
     training(
@@ -43,7 +84,7 @@ extend type Query @guard {
 
 extend type Mutation @guard {
     createTraining(input: TrainingInput  @spread): Training! @can(ability: "create") @create
-    updateTraining(id: ID!, input: TrainingInput  @spread): Training! @can(ability: "update") @update
+    updateTraining(id: ID!, input: UpdateTrainingInput  @spread): Training! @can(ability: "update") @update
     deleteTraining(id: ID! @where(operator: "=")): Training @delete @can(ability: "delete", find: "id")
 }
 

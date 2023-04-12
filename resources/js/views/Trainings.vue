@@ -129,7 +129,7 @@
                   <q-btn v-if="!props.row.status" @click="updateTraining(props.row.id, 'status', true)" size="xs" outline round icon="clear" color="red" />
               </q-td>
               <q-td key="date_start" :props="props">{{ date.formatDate(props.row.date_start, 'DD.MM.YYYY HH:mm') }}
-                <q-popup-edit :model-value="props.row.date_start" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'date_start', value)">
+                <q-popup-edit :model-value="props.row.date_start" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'date_start', date.formatDate(value, 'YYYY-MM-DD HH:mm:ss'))">
                     <div class="row">
                     <q-date v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
                     <q-time v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
@@ -150,7 +150,7 @@
                 </q-popup-edit>
               </q-td>
               <q-td key="date_end" :props="props">{{ date.formatDate(props.row.date_end, 'DD.MM.YYYY HH:mm') }}
-                <q-popup-edit :model-value="props.row.date_end" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'date_end', value)">
+                <q-popup-edit :model-value="props.row.date_end" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'date_end', date.formatDate(value, 'YYYY-MM-DD HH:mm:ss'))">
                     <div class="row">
                     <q-date v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
                     <q-time v-model="scope.value" mask="YYYY-MM-DD HH:mm" />
@@ -441,6 +441,31 @@ export default {
 
     const updateTraining = (trainingId, field, value) => {
       loading.value = true;
+      if (field == 'athletes') {
+          value = {
+              sync:
+                  value.map(id => ({
+                      id: id,
+                      role: "athlete"
+                  }))
+          }
+      } else if (field == 'coaches') {
+          value = {
+              sync:
+                value.map(id => ({
+                  id: id,
+                  role: "coach"
+              }))
+          }
+      } else if (field == 'groups') {
+          value = {
+              sync: value
+          }
+      } else if (field == 'location') {
+          value = {
+              connect: value
+          }
+      }
       apolloClient.mutate({
         mutation: updateTrainingsMutation,
         variables: {id: trainingId, [field]: value}

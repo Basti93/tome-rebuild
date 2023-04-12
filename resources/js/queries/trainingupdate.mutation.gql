@@ -5,10 +5,10 @@ mutation updateTraining (
     $status: Boolean,
     $date_start: DateTime,
     $date_end: DateTime,
-    $location: ID,
-    $athletes: [ID!]
-    $coaches: [ID!]
-    $groups: [ID!]
+    $location: UpdateTrainingLocationInput,
+    $athletes: UpdateTrainingUserInput
+    $coaches: UpdateTrainingUserInput
+    $groups: UpdateTrainingGroupInput
 ) {
     updateTraining(id: $id, input: {
         name: $name,
