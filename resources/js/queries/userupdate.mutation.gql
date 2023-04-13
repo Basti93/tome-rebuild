@@ -6,8 +6,8 @@ mutation updateUser (
     $phone: String,
     $birthdate: Date,
     $email: String,
-    $roles: [ID!]
-    $groups: [ID!]
+    $roles: UpdateUserRoleInput,
+    $groups: UpdateUserGroupInput,
 ) {
     updateUser(id: $id, input: {
         firstname: $firstname,

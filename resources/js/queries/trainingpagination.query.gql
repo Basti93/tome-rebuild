@@ -1,5 +1,5 @@
-query getTrainingsPagination ($first: Int!, $page: Int!, $orderBy: [QueryTrainingsOrderByOrderByClause!], $where: QueryTrainingsWhereWhereConditions) {
-    trainings(first: $first, page: $page, orderBy: $orderBy, where: $where) {
+query getTrainingsPagination ($first: Int!, $page: Int!, $orderBy: [QueryTrainingsOrderByRelationOrderByClause!], $name: String, $description: String, $where: QueryTrainingsWhereWhereConditions) {
+    trainings(first: $first, page: $page, orderBy: $orderBy, name: $name, description: $description, where: $where) {
         paginatorInfo {
             total
             currentPage

@@ -34,7 +34,7 @@
                                   options-dense
                                   emit-value
                                   map-options
-                                  :options="columns.filter(c => c.name === 'firstname' || c.name === 'nickname' || c.name === 'lastname')"
+                                  :options="columns.filter(c => c.name === 'name' || c.name === 'description')"
                                   option-value="name"
                                   label="Spalte zum Suchen"
                           ></q-select>
@@ -46,40 +46,66 @@
                         </div>
                     </div>
                 </div>
-              <q-card flat bordered class="q-pa-sm full-width">
-                <div class="row">
-                    <div class="col-12 q-pt-md">
-                      <q-btn-toggle
-                              v-model="approvedToggle"
-                              @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
-                              :options="[
-                                { label: 'Alle', value: 'all' },
-                                { label: 'Serientermine', value: 'approved' },
-                                { label: 'Manuel angelegt', value: 'notApproved' }
-                              ]"
-                              toggle-color="primary"
-                              rounded />
+              <q-expansion-item
+                      class="full-width shadow-1 overflow-hidden"
+                      expand-separator
+                      icon="filter_list"
+                      style="border-radius: 30px"
+                      header-class="bg-secondary text-white"
+                      expand-icon-class="text-white"
+                      label="Filtereinstellungen"
+                      caption="Nach Gruppe, Serienterminen und Rollen filtern"
+              >
+                <q-card flat bordered>
+                  <div class="row q-ma-lg-lg">
+                      <div class="col-12 col-lg-5 q-pa-md">
+                          <q-select
+                                  label="Gruppen"
+                                  v-model="groupsSelection"
+                                  @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
+                                  :options="groups"
+                                  option-value="id"
+                                  emit-value
+                                  map-options
+                                  :option-label="opt => opt.name"
+                                  multiple
+                                  clearable
+                                  filled>
+                          </q-select>
                       </div>
-                    <div class="col-12 q-pt-md">
-                        <q-btn-toggle
-                                v-model="roleToggle"
-                                @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
-                                :options="roleToggleOptions"
-                                toggle-color="primary"
-                                rounded >
-                        </q-btn-toggle>
-                    </div>
-                    <div class="col-12 col-lg-4 q-pt-md">
-                        <q-select
-                                width="100%"
-                                label="Gruppe"
-                                v-model="groupToggle"
-                                @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
-                                :options="groupToggleOptions">
-                        </q-select>
-                    </div>
-                </div>
-              </q-card>
+                      <div class="col-12 col-lg-4 q-pa-md">
+                          <q-select
+                                  label="Trainer"
+                                  v-model="coachesSelection"
+                                  @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
+                                  :options="coaches"
+                                  option-value="id"
+                                  emit-value
+                                  map-options
+                                  :option-label="opt => opt.firstname + ' ' + opt.lastname"
+                                  multiple
+                                  clearable
+                                  filled>
+                          </q-select>
+                      </div>
+                      <div class="col-12 col-lg-4 q-pl-md q-pr-md q-pt-sm">
+                          <q-select
+                                  label="Sportler"
+                                  v-model="athletesSelection"
+                                  @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
+                                  :options="athletes"
+                                  option-value="id"
+                                  emit-value
+                                  map-options
+                                  :option-label="opt => opt.firstname + ' ' + opt.lastname"
+                                  multiple
+                                  clearable
+                                  filled>
+                          </q-select>
+                      </div>
+                  </div>
+                </q-card>
+              </q-expansion-item>
           </template>
 
           <template v-slot:body="props">
@@ -209,9 +235,9 @@
                   </q-popup-edit>
               </q-td>
               <q-td key="athletes" :props="props">
-                {{ props.row.athletes ? props.row.athletes.length : 0 }}
+                {{ props.row.athletes ? props.row.athletes.length : 0 }} <q-icon name="edit" />
                 <q-popup-edit :model-value="props.row.athletes" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'athletes', value.map(g => g.id))">
-                    <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="athletes" option-value="id" :option-label="(u) => u.nickname ? u.nickname : u.firstname + ' ' + u.lastname">
+                    <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="athletes" option-value="id" :option-label="(u) => u.firstname + ' ' + u.lastname">
                         <template v-slot:after>
                             <q-btn
                                     flat dense color="negative" icon="cancel"
@@ -283,10 +309,10 @@ export default {
     const $q = useQuasar()
     const tableRef = ref()
     const filter = ref('')
-    const filterCol = ref('firstname')
-    const approvedToggle = ref('approved');
-    const roleToggle = ref('3');
-    const groupToggle = ref({value: 'all', label: 'Alle'});
+    const filterCol = ref('name')
+    const groupsSelection = ref(null);
+    const coachesSelection = ref(null);
+    const athletesSelection = ref(null);
     const rows = ref([])
     const loading = ref(false)
     const pagination = ref({
@@ -301,11 +327,11 @@ export default {
       {name: 'name', align: 'center', label: 'Name', field: 'name', sortable: true},
       {name: 'description', align: 'center', label: 'Beschreibung', field: 'description', sortable: false},
       {name: 'status', align: 'center', label: 'Aktiv', field: 'status', sortable: true},
-      {name: 'date_start', align: 'center', label: 'Start', field: 'date_start', sortable: false},
-      {name: 'date_end', align: 'center', label: 'Ende', field: 'date_end', sortable: false},
-      {name: 'location', align: 'center', label: 'Ort', field: 'location', sortable: true,},
+      {name: 'date_start', align: 'center', label: 'Start', field: 'date_start', sortable: true},
+      {name: 'date_end', align: 'center', label: 'Ende', field: 'date_end', sortable: true},
+      {name: 'location', align: 'center', label: 'Ort', field: 'location', sortable: false,},
       {name: 'groups', align: 'center', label: 'Gruppen', field: 'groups', sortable: false,},
-      {name: 'athletes', align: 'center', label: 'Teilnehmer', field: 'athletes', sortable: false,},
+      {name: 'athletes', align: 'center', label: 'Teilnehmer', field: 'athletes', sortable: true,},
       {name: 'coaches', align: 'center', label: 'Trainer', field: 'coaches', sortable: false,},
       {name: 'actions', align: 'center', label: 'Aktionen', field: '', sortable: false,},
     ]
@@ -315,96 +341,91 @@ export default {
     const {result: athletesResult} = useQuery(athletesQuery);
     const {result: coachesResult} = useQuery(coachesQuery);
     const roles = computed(() => rolesResult.value?.roles ?? [])
-    const roleToggleOptions = computed(() => {
-        const options = [...roles.value.map(r => {
-            return {
-                label: r.name,
-                value: r.id
-            }
-        })];
-        options.unshift({
-            label: 'Alle',
-            value: 'all'
-        })
-      return options
-    })
-    const groupToggleOptions = computed(() => {
-        const options = [...groups.value.map(g => {
-            return {
-                label: g.name,
-                value: g.id
-            }
-        })];
-        options.unshift({
-            label: 'Alle',
-            value: 'all'
-        })
-      return options
-    })
     const groups = computed(() => groupsResult.value?.groups ?? [])
     const locations = computed(() => locationsResult.value?.locations ?? [])
     const athletes = computed(() => athletesResult.value?.users ?? [])
     const coaches = computed(() => coachesResult.value?.users ?? [])
 
-    const onRequest = (props) => {
-      loading.value = true
-      const {page, rowsPerPage, sortBy, descending} = props.pagination
-      // calculate starting row of data
-      const filter = props.filter
-      const variables = ref({
-        first: rowsPerPage,
-        page: page,
-      });
-      if (sortBy) {
-        variables.value.orderBy = [
-          {
-            column: sortBy.toUpperCase(),
-            order: descending ? 'DESC' : 'ASC',
-          }
-        ]
+    const addToWhere = (variables, relation, value) => {
+      if (!variables.where) {
+          variables.where = {};
+          variables.where.AND = [];
       }
-      if (filter) {
-          variables.value[`${filterCol.value}`] = "%" + filter + "%";
-      }
-      if (roleToggle.value != 'all') {
-          variables.value[`hasRole`] = {
-              column: 'ID',
-              value: roleToggle.value
-          }
-      }
-      if (groupToggle.value.value !== 'all') {
-          variables.value[`hasGroup`] = {
-              column: 'ID',
-              value: groupToggle.value.value
-          }
-      }
-      if (approvedToggle.value !== 'all') {
-          variables.value['approved'] = approvedToggle.value == 'approved';
-      }
-
-      apolloClient.query({
-        query: trainingsPaginationQuery,
-        variables: variables.value
-      }).then(({data}) => {
-          // update rowsCount with appropriate value
-          pagination.value.rowsNumber = data.trainings.paginatorInfo.total
-
-          // clear out existing data and add new
-          rows.value.splice(0, rows.value.length, ...data.trainings.data)
-
-          // don't forget to update local pagination object
-          pagination.value.page = page
-          pagination.value.rowsPerPage = rowsPerPage
-          pagination.value.sortBy = sortBy
-          pagination.value.descending = descending
-      }).catch(() => {
-          $q.notify({
-              message: 'Daten konnten nicht geladen werden',
-              color: 'negative'})
-      }).finally(() => {
-          loading.value = false
-      })
+        variables.where.AND.push({
+            HAS: {
+                relation: relation,
+                condition: {
+                    column: 'ID',
+                    operator: 'IN',
+                    value: value
+                }
+            }
+        });
     }
+
+      const onRequest = (props) => {
+        loading.value = true
+        const {page, rowsPerPage, sortBy, descending} = props.pagination
+        const filter = props.filter
+        const variables = {
+          first: rowsPerPage,
+          page: page,
+        };
+        if (sortBy) {
+            if (sortBy == 'athletes') {
+                variables.orderBy = [
+                    {
+                        athletes: { aggregate: 'COUNT' },
+                        order: descending ? 'DESC' : 'ASC',
+                    }
+                ]
+            } else {
+                variables.orderBy = [
+                    {
+                        column: sortBy.toUpperCase(),
+                        order: descending ? 'DESC' : 'ASC',
+                    }
+                ]
+            }
+
+        }
+        if (filter) {
+            variables[`${filterCol.value}`] = "%" + filter + "%";
+        }
+
+        if (athletesSelection.value && athletesSelection.value.length > 0) {
+            addToWhere(variables, 'athletes', athletesSelection.value);
+        }
+        if (coachesSelection.value && coachesSelection.value.length > 0) {
+            addToWhere(variables, 'coaches', coachesSelection.value);
+        }
+        if (groupsSelection.value && groupsSelection.value.length > 0) {
+            addToWhere(variables, 'groups', groupsSelection.value);
+        }
+
+        apolloClient.query({
+          query: trainingsPaginationQuery,
+          variables: variables
+        }).then(({data}) => {
+            // update rowsCount with appropriate value
+            pagination.value.rowsNumber = data.trainings.paginatorInfo.total
+
+            // clear out existing data and add new
+            rows.value.splice(0, rows.value.length, ...data.trainings.data)
+
+            // don't forget to update local pagination object
+            pagination.value.page = page
+            pagination.value.rowsPerPage = rowsPerPage
+            pagination.value.sortBy = sortBy
+            pagination.value.descending = descending
+        }).catch(() => {
+            $q.notify({
+                message: 'Daten konnten nicht geladen werden',
+                color: 'negative'})
+        }).finally(() => {
+            loading.value = false
+        })
+      }
 
     const confirmDelete = (training) => {
           $q.dialog({
@@ -548,9 +569,9 @@ export default {
       rows,
       filter,
       tableRef,
-      approvedToggle,
-      roleToggle,
-      groupToggle,
+      coachesSelection,
+      athletesSelection,
+      groupsSelection,
       locations,
       loading,
       onRequest,
@@ -563,8 +584,6 @@ export default {
       addAthleteRole,
       filterCol,
       roles,
-      roleToggleOptions,
-      groupToggleOptions,
       groups,
       athletes,
       coaches,

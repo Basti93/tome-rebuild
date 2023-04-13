@@ -12,6 +12,20 @@ class Training extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'description',
+        'start_date',
+        'end_date',
+        'location_id',
+        'status',
+    ];
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'trainings_users');

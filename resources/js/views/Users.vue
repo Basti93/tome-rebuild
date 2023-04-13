@@ -46,9 +46,19 @@
                         </div>
                     </div>
                 </div>
-              <q-card flat bordered class="q-pa-sm full-width">
-                <div class="row">
-                    <div class="col-12 q-pt-md">
+              <q-expansion-item
+                      class="full-width shadow-1 overflow-hidden"
+                      expand-separator
+                      icon="filter_list"
+                      style="border-radius: 30px"
+                      header-class="bg-primary text-white"
+                      expand-icon-class="text-white"
+                      label="Filtereinstellungen"
+                      caption="Nach Gruppen, Rollen und Freigabe filtern"
+              >
+              <q-card flat bordered>
+                <div class="row q-ma-lg">
+                    <div class="col-12 col-lg-5 q-pt-md ">
                       <q-btn-toggle
                               v-model="approvedToggle"
                               @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
@@ -60,7 +70,7 @@
                               toggle-color="primary"
                               rounded />
                       </div>
-                    <div class="col-12 q-pt-md">
+                    <div class="col-12 col-lg-5 q-pt-md">
                         <q-btn-toggle
                                 v-model="roleToggle"
                                 @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
@@ -71,20 +81,28 @@
                     </div>
                     <div class="col-12 col-lg-4 q-pt-md">
                         <q-select
-                                width="100%"
-                                label="Gruppe"
-                                v-model="groupToggle"
+                                label="Gruppen"
+                                v-model="groupsSelection"
                                 @update:model-value="pagination.page = 1; tableRef.requestServerInteraction()"
-                                :options="groupToggleOptions">
+                                :options="groups"
+                                option-value="id"
+                                emit-value
+                                map-options
+                                :option-label="opt => opt.name"
+                                multiple
+                                clearable
+                                filled>
                         </q-select>
                     </div>
                 </div>
               </q-card>
+              </q-expansion-item>
           </template>
 
           <template v-slot:body="props">
             <q-tr :props="props">
               <q-td key="id" :props="props">{{ props.row.id }}</q-td>
+              <q-td key="profile_image" :props="props"><q-avatar><q-img :src="props.row.imageUrl"/></q-avatar></q-td>
               <q-td key="nickname" :props="props">{{ props.row.nickname }}
                 <q-popup-edit :model-value="props.row.nickname" v-slot="scope" @save="(value) => updateUser(props.row.id, 'nickname', value)">
                   <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
@@ -246,9 +264,9 @@ export default {
     const tableRef = ref()
     const filter = ref('')
     const filterCol = ref('firstname')
-    const approvedToggle = ref('approved');
-    const roleToggle = ref('3');
-    const groupToggle = ref({value: 'all', label: 'Alle'});
+    const approvedToggle = ref('all');
+    const roleToggle = ref('all');
+    const groupsSelection = ref(null);
     const rows = ref([])
     const loading = ref(false)
     const pagination = ref({
@@ -260,6 +278,7 @@ export default {
     })
     const columns = [
       {name: 'id', required: true, label: 'ID', align: 'left', field: 'id', sortable: true},
+      {name: 'profile_image', label: 'Bild', align: 'left', field: '', sortable: false},
       {name: 'nickname', align: 'center', label: 'Spitzname', field: 'nickname', sortable: true},
       {name: 'firstname', align: 'center', label: 'Vorname', field: 'firstname', sortable: true},
       {name: 'lastname', align: 'center', label: 'Nachname', field: 'lastname', sortable: true},
@@ -287,32 +306,36 @@ export default {
         })
       return options
     })
-    const groupToggleOptions = computed(() => {
-        const options = [...groups.value.map(g => {
-            return {
-                label: g.name,
-                value: g.id
-            }
-        })];
-        options.unshift({
-            label: 'Alle',
-            value: 'all'
-        })
-      return options
-    })
     const groups = computed(() => groupsResult.value?.groups ?? [])
+
+    const addToWhere = (variables, relation, value) => {
+        if (!variables.where) {
+            variables.where = {};
+            variables.where.AND = [];
+        }
+        variables.where.AND.push({
+            HAS: {
+                relation: relation,
+                condition: {
+                    column: 'ID',
+                    operator: 'IN',
+                    value: value
+                }
+            }
+        });
+    }
 
     const onRequest = (props) => {
       loading.value = true
       const {page, rowsPerPage, sortBy, descending} = props.pagination
       // calculate starting row of data
       const filter = props.filter
-      const variables = ref({
+      const variables ={
         first: rowsPerPage,
         page: page,
-      });
+      };
       if (sortBy) {
-        variables.value.orderBy = [
+        variables.orderBy = [
           {
             column: sortBy.toUpperCase(),
             order: descending ? 'DESC' : 'ASC',
@@ -320,27 +343,24 @@ export default {
         ]
       }
       if (filter) {
-          variables.value[`${filterCol.value}`] = "%" + filter + "%";
+          variables[`${filterCol.value}`] = "%" + filter + "%";
       }
       if (roleToggle.value != 'all') {
-          variables.value[`hasRole`] = {
+          variables[`hasRole`] = {
               column: 'ID',
               value: roleToggle.value
           }
       }
-      if (groupToggle.value.value !== 'all') {
-          variables.value[`hasGroup`] = {
-              column: 'ID',
-              value: groupToggle.value.value
-          }
+      if (groupsSelection.value && groupsSelection.value.length > 0) {
+          addToWhere(variables, 'groups', groupsSelection.value);
       }
       if (approvedToggle.value !== 'all') {
-          variables.value['approved'] = approvedToggle.value == 'approved';
+          variables['approved'] = approvedToggle.value == 'approved';
       }
 
       apolloClient.query({
         query: usersPaginationQuery,
-        variables: variables.value
+        variables: variables
       }).then(({data}) => {
           // update rowsCount with appropriate value
           pagination.value.rowsNumber = data.usersPagination.paginatorInfo.total
@@ -481,7 +501,7 @@ export default {
       tableRef,
       approvedToggle,
       roleToggle,
-      groupToggle,
+      groupsSelection,
       loading,
       onRequest,
       pagination,
@@ -494,7 +514,6 @@ export default {
       filterCol,
       roles,
       roleToggleOptions,
-      groupToggleOptions,
       groups,
       date,
       computed,

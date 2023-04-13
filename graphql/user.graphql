@@ -22,6 +22,31 @@ type Image {
     url: String!
 }
 
+input UpdateUserGroupInput {
+    sync: [ID!]
+    delete: [ID!]
+    connect: [ID!]
+    disconnect: [ID!]
+}
+
+input UpdateUserRoleInput {
+    sync: [ID!]
+    delete: [ID!]
+    connect: [ID!]
+    disconnect: [ID!]
+}
+
+input UpdateUserInput {
+    firstname: String
+    lastname: String
+    nickname: String
+    phone: String
+    birthdate: Date
+    email: String @rules(apply: ["bail", "email", "unique:users,email"])
+    roles: UpdateUserRoleInput @rules(apply: ["exists:roles,id"])
+    groups: UpdateUserGroupInput @rules(apply: ["exists:groups,id"])
+}
+
 input UserInput {
     firstname: String
     lastname: String
@@ -48,7 +73,7 @@ type Query @guard {
     "Get all users."
     users(
         hasRole: _ @whereHasConditions(relation: "roles", columns: ["id", "name"])
-        hasGroup: _ @whereHasConditions(relation: "groups", columns: ["id", "name"])
+        where: _ @whereConditions(columns: ["id", "firstname", "lastname", "nickname", "phone", "birthdate", "email", "created_at", "approved"])
         approved: Boolean @scope
         orderBy: _ @orderBy(columns: ["firstname", "lastname", "nickname"])
     ): [User!]! @all @can(ability: "viewAny")
@@ -70,7 +95,7 @@ type Query @guard {
         nickname: String @where(operator: "like")
         approved: Boolean @scope
         hasRole: _ @whereHasConditions(relation: "roles", columns: ["id", "name"])
-        hasGroup: _ @whereHasConditions(relation: "groups", columns: ["id", "name"])
+        where: _ @whereConditions(columns: ["id", "firstname", "lastname", "nickname", "phone", "birthdate", "email", "created_at", "approved"])
         orderBy: _ @orderBy(columns: ["id", "firstname", "lastname", "nickname", "phone", "birthdate", "email", "created_at", "approved"])
     ): [User!]! @can(ability: "viewAny") @paginate(defaultCount: 25) @softDeletes
 
@@ -82,7 +107,7 @@ extend type Mutation @guard {
     "Update the authenticated user."
     updateMe(input: UpdateMeInput  @spread): User! @can(ability: "updateMe", injectArgs: true, model: "App\\Models\\User") @update
     "Update a user by ID."
-    updateUser(id: ID!, input: UserInput  @spread): User! @can(ability: "update", injectArgs: true, model: "App\\Models\\User") @field(resolver: "\\App\\GraphQL\\Mutations\\UpdateUser")
+    updateUser(id: ID!, input: UpdateUserInput  @spread): User! @can(ability: "update", injectArgs: true, model: "App\\Models\\User") @update
     "Delete a user by ID."
     deleteUser(id: ID! @where(operator: "=")): User @delete @can(ability: "delete", find: "id")
     "Upload a profile image for the authenticated user."
