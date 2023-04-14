@@ -110,6 +110,25 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         return $this->belongsToMany(Training::class, 'trainings_users')->withPivot(['attendance']);
     }
 
+    public function upcomingTrainingsAsCoach(): BelongsToMany
+    {
+            return $this->belongsToMany(Training::class, 'trainings_users')
+                ->where('trainings.date_start', '>=', now())
+                ->where('trainings_users.role', 'coach')
+                ->orderBy('trainings.date_start')
+                ->withPivot(['attendance']);
+    }
+
+    public function upcomingTrainingsAsAthlete(): BelongsToMany
+    {
+            return $this->belongsToMany(Training::class, 'trainings_users')
+                ->where('trainings.date_start', '>=', now())
+                ->where('trainings.status', true)
+                ->where('trainings_users.role', 'athlete')
+                ->orderBy('trainings.date_start')
+                ->withPivot(['attendance']);
+    }
+
     public function prunable()
     {
         return static::where('deleted_at', '<=', now()->subMonths(1));

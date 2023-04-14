@@ -13,7 +13,7 @@ class TrainingPolicy
      */
     public function before(User $user, string $ability): bool|null
     {
-        if ($user->hasRole("admin")) {
+        if ($ability != 'updateAttendance' && $user->hasRole("admin")) {
             return true;
         }
 
@@ -33,7 +33,9 @@ class TrainingPolicy
      */
     public function view(User $user, Training $model): bool
     {
-        return $user->hasPermissionTo('view-training');
+        return $user->hasPermissionTo('view-training')
+            || $model->groups()->find($user->id)->exists()
+            || $model->users()->find($user->id)->exists();
     }
 
     /**
@@ -50,6 +52,18 @@ class TrainingPolicy
     public function update(User $user, $args): bool
     {
         return $user->hasPermissionTo('edit-training');
+    }
+
+    /**
+     * Determine whether the user can update the attendance status.
+     */
+    public function updateAttendance(User $user, $args): bool
+    {
+        $training = Training::findOrFail($args['id']);
+        if ($training->date_start < now() || $training->date_end < now()) {
+            return false;
+        }
+        return $training->athletes()->whereUserId($user->id)->exists();
     }
 
     /**

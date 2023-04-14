@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Trainings Organisation Made Easy">
+    <meta name="author" content="T.O.M.E">
+    <link rel="icon" href="{{ url('icon.png') }}">
     <title>T.O.M.E</title>
     @vite('resources/css/app.css')
 </head>

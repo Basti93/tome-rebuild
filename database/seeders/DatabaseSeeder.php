@@ -21,9 +21,9 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             ConfigTableSeeder::class,
         ]);
-        Group::factory(10)->create();
-        Location::factory(5)->create();
+        Group::factory(3)->create();
+        Location::factory(1)->create();
         User::factory(50)->create();
-        Training::factory(500)->create();
+        Training::factory(200)->create();
     }
 }

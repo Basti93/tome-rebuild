@@ -1,0 +1,7 @@
+fragment PlainUserFragment on User {
+    id
+    firstname
+    lastname
+    nickname
+    imageUrl
+}

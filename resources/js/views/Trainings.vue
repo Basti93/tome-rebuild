@@ -2,7 +2,7 @@
   <q-page>
       <div class="row q-ma-md">
         <q-table
-            class="col-12"
+            class="col-12 full-height full-width"
             ref="tableRef"
             :visible-columns="visibleColumns"
             title="Trainings"

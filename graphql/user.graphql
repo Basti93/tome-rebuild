@@ -14,6 +14,8 @@ type User {
     imageUrl: String
     roles: [Role!]! @belongsToMany
     trainings: [Training!] @belongsToMany
+    upcomingTrainingsAsAthlete: [Training!] @belongsToMany
+    upcomingTrainingsAsCoach: [Training!] @belongsToMany
     groups: [Group!]! @belongsToMany
     approved: Boolean!
     pivot: TrainingUserPivot

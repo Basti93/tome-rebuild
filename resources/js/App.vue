@@ -1,12 +1,12 @@
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="hHh Lpr fFf">
 
     <q-header elevated class="bg-primary text-white">
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer"/>
         <q-toolbar-title>
           <q-avatar>
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+            <img src="icon.png" style="filter: brightness(0) invert(1);">
           </q-avatar>
           {{ appName }}
         </q-toolbar-title>
@@ -48,13 +48,12 @@
               @userUpdated="updateLoginState"
               @configChanged="fetchConfigs"
       />
+
     </q-page-container>
 
   </q-layout>
 </template>
 <script>
-
-
 import {computed, reactive, ref} from "vue";
 import {useQuasar} from "quasar";
 import apolloClient from "./apollo";

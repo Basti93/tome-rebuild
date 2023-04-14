@@ -1,14 +1,15 @@
+#import "./fragments/user.fragment.gql"
+#import "./fragments/training.fragment.gql"
+
 query me {
     me {
-        id
-        firstname
-        lastname
-        nickname
-        birthdate
-        phone
-        email
-        image
-        imageUrl
+        ...UserFragment
+        upcomingTrainingsAsAthlete {
+            ...TrainingFragment
+        }
+        upcomingTrainingsAsCoach {
+            ...TrainingFragment
+        }
         roles {
             name
             permissions {

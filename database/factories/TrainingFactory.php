@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Group;
 use App\Models\Training;
 use App\Models\User;
+use DateTime;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,14 +20,14 @@ class TrainingFactory extends Factory
      */
     public function definition(): array
     {
-        $startDateTraining = $this->faker->dateTimeBetween($startDate = '-2 years', $endDate = 'now', $timezone = null);
+        $startDateTraining = $this->faker->dateTimeThisYear('+2 months');
         return [
             'name' => $this->faker->word,
             'description' => $this->faker->sentence,
             'status' => $this->faker->boolean,
             'date_start' => $startDateTraining,
-            'date_end' => $this->faker->dateTimeBetween($startDateTraining, $endDate = 'now', $timezone = null),
-            'location_id' => $this->faker->numberBetween(1, 5),
+            'date_end' => $startDateTraining->modify('+2 hour'),
+            'location_id' => 1,
         ];
     }
 

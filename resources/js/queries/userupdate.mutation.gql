@@ -1,3 +1,5 @@
+#import "./fragments/user.fragment.gql"
+
 mutation updateUser (
     $id: ID!,
     $firstname: String,
@@ -19,22 +21,6 @@ mutation updateUser (
         roles: $roles,
         groups: $groups,
     }) {
-        id
-        firstname
-        lastname
-        nickname
-        birthdate
-        created_at
-        phone
-        email
-        roles {
-            id
-            name
-        }
-        groups {
-            id
-            name
-        }
-        approved
+        ...UserFragment
     }
 }

@@ -40,6 +40,10 @@ input UpdateTrainingInput {
     groups: UpdateTrainingGroupInput
 }
 
+input UpdateTrainingAttendanceInput {
+    attend: Boolean
+}
+
 input UpdateTrainingLocationInput {
     connect: ID
 }
@@ -74,7 +78,7 @@ extend type Query @guard {
     training(
         "Search by primary key."
         id: ID! @eq
-    ): Training @find @can(ability: "view")
+    ): Training @find @can(ability: "view", find: "id")
 
     "List multiple trainings."
     trainings(
@@ -91,6 +95,7 @@ extend type Query @guard {
 extend type Mutation @guard {
     createTraining(input: TrainingInput  @spread): Training! @can(ability: "create") @create
     updateTraining(id: ID!, input: UpdateTrainingInput  @spread): Training! @can(ability: "update") @update
+    updateTrainingAttendance(id: ID!, attend: Boolean!): Training! @can(ability: "updateAttendance", injectArgs: true) @field(resolver: "\\App\\GraphQL\\Mutations\\UpdateTrainingAttendance")
     deleteTraining(id: ID! @where(operator: "=")): Training @delete @can(ability: "delete", find: "id")
 }
 

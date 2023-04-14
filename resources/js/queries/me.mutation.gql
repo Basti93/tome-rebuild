@@ -1,3 +1,5 @@
+#import "./fragments/user.fragment.gql"
+
 mutation updateMe (
     $id: ID!,
     $firstname: String!,
@@ -16,14 +18,6 @@ mutation updateMe (
         birthdate: $birthdate,
         phone: $phone,
     }) {
-        id
-        firstname
-        lastname
-        nickname
-        birthdate
-        phone
-        email
-        image
-        imageUrl
+        ...UserFragment
     }
 }

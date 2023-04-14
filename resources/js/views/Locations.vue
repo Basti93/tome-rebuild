@@ -10,6 +10,7 @@
             row-key="id"
             :rows-per-page-options="[10, 25, 50, 100]"
             v-model:pagination="pagination"
+            wrap-cells
             :loading="loading"
             :filter="filter"
             binary-state-sort

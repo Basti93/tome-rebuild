@@ -1,3 +1,5 @@
+#import "./fragments/user.fragment.gql"
+
 query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersPaginationOrderByOrderByClause!], $firstname: String, $lastname: String, $nickname: String, $hasRole: QueryUsersPaginationHasRoleWhereHasConditions, $where: QueryUsersPaginationWhereWhereConditions, $approved: Boolean) {
     usersPagination(first: $first, page: $page, orderBy: $orderBy, firstname: $firstname, lastname: $lastname, nickname: $nickname, hasRole: $hasRole, where: $where, approved: $approved) {
         paginatorInfo {
@@ -10,24 +12,7 @@ query getUsersPagination ($first: Int!, $page: Int!, $orderBy: [QueryUsersPagina
             count
         }
         data {
-            id
-            firstname
-            lastname
-            birthdate
-            created_at
-            nickname
-            phone
-            email
-            imageUrl
-            roles {
-                id
-                name
-            }
-            groups {
-                id
-                name
-            }
-            approved
+            ...UserFragment
         }
     }
 }

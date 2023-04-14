@@ -1,0 +1,10 @@
+#import "./fragments/training.fragment.gql"
+
+mutation updateTrainingAttendance (
+    $id: ID!,
+    $attend: Boolean!
+) {
+    updateTrainingAttendance(id: $id, attend: $attend) {
+        ...TrainingFragment
+    }
+}
