@@ -1,11 +1,29 @@
 mutation updateGroup (
     $id: ID!,
     $name: String,
+    $athletes: UpdateGroupUserInput
+    $coaches: UpdateGroupUserInput
 ) {
     updateGroup(id: $id, input: {
         name: $name,
+        athletes: $athletes,
+        coaches: $coaches,
     }) {
         id
         name
+        athletes {
+            id
+            firstname
+            lastname
+            nickname
+            imageUrl
+        }
+        coaches {
+            id
+            firstname
+            lastname
+            nickname
+            imageUrl
+        }
     }
 }

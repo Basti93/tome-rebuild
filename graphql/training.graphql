@@ -12,6 +12,10 @@ type Training @guard{
     groups: [Group!] @hasMany
 }
 
+type TrainingUserPivot {
+    attendance: Boolean
+}
+
 input TrainingInput {
     name: String
     description: String

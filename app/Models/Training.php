@@ -33,12 +33,12 @@ class Training extends Model
 
     public function athletes(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'trainings_users')->wherePivot('role', 'athlete');
+        return $this->belongsToMany(User::class, 'trainings_users')->wherePivot('role', 'athlete')->withPivot('attendance');
     }
 
     public function coaches(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'trainings_users')->wherePivot('role', 'coach');
+        return $this->belongsToMany(User::class, 'trainings_users')->wherePivot('role', 'coach')->withPivot('attendance');
     }
 
     public function groups(): BelongsToMany

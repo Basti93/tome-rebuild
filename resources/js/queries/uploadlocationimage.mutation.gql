@@ -1,0 +1,12 @@
+mutation uploadLocationImage ($id: ID!, $file: Upload!) {
+    uploadLocationImage(
+        id: $id,
+        file: $file,
+    ) {
+        id
+        name
+        address
+        image
+        imageUrl
+    }
+}

@@ -10,5 +10,8 @@ query getCoaches {
         lastname
         nickname
         imageUrl
+        groups {
+            id
+        }
     }
 }

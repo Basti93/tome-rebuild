@@ -1,4 +1,4 @@
-query getCoaches {
+query getAthletes {
     users(
         hasRole: {
             column: NAME,
@@ -10,5 +10,8 @@ query getCoaches {
         lastname
         nickname
         imageUrl
+        groups {
+            id
+        }
     }
 }

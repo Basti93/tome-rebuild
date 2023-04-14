@@ -12,6 +12,9 @@ query getLocationPagination ($first: Int!, $page: Int!, $orderBy: [QueryLocation
         data {
             id
             name
+            address
+            image
+            imageUrl
         }
     }
 }

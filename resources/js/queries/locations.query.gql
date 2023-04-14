@@ -2,5 +2,7 @@ query getLocations {
     locations {
         id
         name
+        address
+        image
     }
 }

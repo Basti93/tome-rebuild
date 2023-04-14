@@ -53,7 +53,56 @@
                   </q-input>
                 </q-popup-edit>
               </q-td>
+              <q-td key="address" :props="props">{{ props.row.address }}
+                <q-popup-edit :model-value="props.row.address" v-slot="scope" @save="(value) => updateLocation(props.row.id, 'address', value)">
+                  <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set">
+                    <template v-slot:after>
+                      <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                      />
 
+                      <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                      />
+                    </template>
+                  </q-input>
+                </q-popup-edit>
+              </q-td>
+
+              <q-td key="image" :props="props"><q-img sizes="S" :src="props.row.imageUrl" />
+              <q-popup-edit :model-value="props.row.imageUrl" v-slot="scope" @save="(value) => uploadImage(props.row.id, value)">
+                  <q-file
+                          filled
+                          bottom-slots
+                          v-model="scope.value"
+                          label="Bild hochladen"
+                          :hint="scope.value ? scope.value : 'Bitte wählen Sie ein Bild aus'"
+                          max-file-size="5242880"
+                          accept="image/*"
+                          max-files="1"
+                          counter>
+                      <template v-slot:prepend>
+                          <q-icon name="cloud_upload" @click.stop.prevent />
+                      </template>
+                      <template v-slot:hint>
+                          Maximal 5 MB
+                      </template>
+                      <template v-slot:after>
+                          <q-btn
+                                  flat dense color="negative" icon="cancel"
+                                  @click.stop.prevent="scope.cancel"
+                          />
+
+                          <q-btn
+                                  flat dense color="positive" icon="check_circle"
+                                  @click.stop.prevent="scope.set"
+                          />
+                      </template>
+                  </q-file>
+              </q-popup-edit>
+              </q-td>
               <q-td key="actions" :props="props">
                   <q-btn round flat icon="more_vert">
                   <q-menu auto-close v-ripple >
@@ -97,6 +146,7 @@
 <script>
 
 import locationsPaginationQuery from "../queries/locationpagination.query.gql";
+import uploadImageMutation from "../queries/uploadlocationimage.mutation.gql";
 import deleteLocationMutation from "../queries/locationdelete.mutation.gql";
 import createLocationMutation from "../queries/locationcreate.mutation.gql";
 import updateLocationsMutation from "../queries/locationupdate.mutation.gql";
@@ -127,6 +177,8 @@ export default {
     const columns = [
       {name: 'id', required: true, label: 'ID', align: 'left', field: 'id', sortable: true},
       {name: 'name', align: 'center', label: 'Name', field: 'name', sortable: true},
+      {name: 'address', align: 'center', label: 'Adresse', field: 'address', sortable: false},
+      {name: 'image', align: 'center', label: 'Bild', field: 'image', sortable: false},
       {name: 'actions', align: 'center', label: 'Aktionen', field: '', sortable: false,},
     ]
 
@@ -235,6 +287,33 @@ export default {
       })
     }
 
+      const uploadImage = (id, image) => {
+          loading.value = true;
+          apolloClient.mutate({
+              mutation: uploadImageMutation,
+              variables: {
+                  id: id,
+                  file: image,
+              },
+          }).then(({data}) => {
+              const index = rows.value.findIndex(row => row.id == data.uploadLocationImage.id);
+              if (index > -1) {
+                  rows.value[index] = data.uploadLocationImage
+              }
+              $q.notify({
+                  type: 'positive',
+                  message: 'Bild erfolgreich aktualisiert'
+              })
+          }).catch(() => {
+              $q.notify({
+                  type: 'negative',
+                  message: 'Fehler beim Aktualisieren des Bildes'
+              })
+          }).finally(() => {
+              loading.value = false;
+          })
+      }
+
     const updateLocation = (locationId, field, value) => {
       loading.value = true;
       apolloClient.mutate({
@@ -245,7 +324,7 @@ export default {
               message: 'Ort ' + data.updateLocation.name + ' aktualisiert',
               color: 'positive'})
           const index = rows.value.findIndex(row => row.id == data.updateLocation.id);
-          if (index > -1) { // only splice array when item is found
+          if (index > -1) {
               rows.value[index] = data.updateLocation
           }
       }).catch(() => {
@@ -277,6 +356,7 @@ export default {
       deleteLocation,
       confirmDelete,
       updateLocation,
+      uploadImage,
       filterCol,
       editName,
       date,

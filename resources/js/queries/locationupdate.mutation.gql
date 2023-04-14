@@ -1,11 +1,16 @@
 mutation updateLocation (
     $id: ID!,
     $name: String,
+    $address: String,
 ) {
     updateLocation(id: $id, input: {
         name: $name,
+        address: $address,
     }) {
         id
         name
+        address
+        image
+        imageUrl
     }
 }

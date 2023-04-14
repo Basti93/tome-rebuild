@@ -1,10 +1,41 @@
 type Group @guard{
     id: ID!
     name: String
+    athletes: [User!] @hasMany
+    coaches: [User!] @hasMany
+    pivot: GroupUserPivot
 }
 
 input GroupInput {
     name: String
+}
+
+input UpdateGroupInput {
+    name: String
+    athletes: UpdateGroupUserInput
+    coaches: UpdateGroupUserInput
+}
+
+input UpdateGroupUserInput {
+    sync: [ConnectGroupUser!]
+    delete: [ID!]
+    connect: [ConnectGroupUser!]
+    disconnect: [ID!]
+}
+
+input ConnectGroupUser {
+    id: ID!
+    role: GroupRole
+}
+
+
+type GroupUserPivot {
+    role: GroupRole
+}
+
+enum GroupRole {
+    athlete
+    coach
 }
 
 extend type Query @guard {
@@ -21,14 +52,14 @@ extend type Query @guard {
     groupsPaginate(
         "Filters. Accepts SQL LIKE wildcards `%` and `_`."
         name: String @where(operator: "like")
-        orderBy: _ @orderBy(columns: ["id", "name"])
+        orderBy: _ @orderBy(columns: ["id", "name"], relations: [{ relation: "athletes"}])
     ): [Group!]! @can(ability: "viewAny") @paginate(defaultCount: 25) @softDeletes
 
 }
 
 extend type Mutation @guard {
     createGroup(input: GroupInput  @spread): Group! @can(ability: "create") @create
-    updateGroup(id: ID!, input: GroupInput  @spread): Group! @can(ability: "update") @update
+    updateGroup(id: ID!, input: UpdateGroupInput  @spread): Group! @can(ability: "update") @update
     deleteGroup(id: ID! @where(operator: "=")): Group @delete @can(ability: "delete", find: "id")
 }
 

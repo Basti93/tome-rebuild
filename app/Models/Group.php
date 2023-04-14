@@ -16,6 +16,16 @@ class Group extends Model
         return $this->belongsToMany(User::class, 'groups_users');
     }
 
+    public function athletes(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'groups_users')->wherePivot('role', 'athlete');
+    }
+
+    public function coaches(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'groups_users')->wherePivot('role', 'coach');
+    }
+
     public function trainings(): BelongsToMany
     {
         return $this->belongsToMany(Training::class, 'trainings_groups');

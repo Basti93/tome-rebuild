@@ -1,4 +1,4 @@
-query getGroupPagination ($first: Int!, $page: Int!, $orderBy: [QueryGroupsPaginateOrderByOrderByClause!], $name: String) {
+query getGroupPagination ($first: Int!, $page: Int!, $orderBy: [QueryGroupsPaginateOrderByRelationOrderByClause!], $name: String) {
     groupsPaginate(first: $first, page: $page, orderBy: $orderBy, name: $name) {
         paginatorInfo {
             total
@@ -12,6 +12,20 @@ query getGroupPagination ($first: Int!, $page: Int!, $orderBy: [QueryGroupsPagin
         data {
             id
             name
+            athletes {
+                id
+                firstname
+                lastname
+                nickname
+                imageUrl
+            }
+            coaches {
+                id
+                firstname
+                lastname
+                nickname
+                imageUrl
+            }
         }
     }
 }

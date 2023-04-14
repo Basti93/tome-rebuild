@@ -30,6 +30,9 @@ query getTrainingsPagination ($first: Int!, $page: Int!, $orderBy: [QueryTrainin
                 lastname
                 nickname
                 imageUrl
+                pivot {
+                    attendance
+                }
             }
             coaches {
                 id
@@ -37,7 +40,11 @@ query getTrainingsPagination ($first: Int!, $page: Int!, $orderBy: [QueryTrainin
                 lastname
                 nickname
                 imageUrl
+                pivot {
+                    attendance
+                }
             }
+
         }
     }
 }

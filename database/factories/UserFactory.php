@@ -37,8 +37,14 @@ class UserFactory extends Factory
         return $this->afterMaking(function (User $user) {
             // ...
         })->afterCreating(function (User $user) {
-            $user->groups()->attach(Group::inRandomOrder()->take(random_int(1, 3))->pluck('id'));
-            $user->assignRole('athlete');
+            $role = $this->faker->randomElement([['role' => 'athlete'], ['role' => 'coach']]);
+
+            $user->groups()->attach(Group::inRandomOrder()->take(random_int(1, 3))->pluck('id'), $role);
+            if ($role['role'] === 'coach') {
+                $user->assignRole('coach');
+            } else {
+                $user->assignRole('athlete');
+            }
         });
     }
 
@@ -51,4 +57,5 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
 }

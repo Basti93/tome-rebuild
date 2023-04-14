@@ -4,6 +4,7 @@
         <q-table
             class="col-12"
             ref="tableRef"
+            :visible-columns="visibleColumns"
             title="Trainings"
             :rows="rows"
             :columns="columns"
@@ -25,6 +26,22 @@
                     </div>
                     <div class="col self-center">
                         <div class="row">
+                          <q-select
+                                  v-model="visibleColumns"
+                                  multiple
+                                  outlined
+                                  dense
+                                  options-dense
+                                  class="q-pr-md col"
+                                  label="Spalten zum Anzeigen"
+                                  :display-value="$q.lang.table.columns"
+                                  emit-value
+                                  map-options
+                                  :options="columns.filter(c => c.name !== 'id' && c.name !== 'actions')"
+                                  option-value="name"
+                                  options-cover
+                                  style="min-width: 200px"
+                          />
                           <q-select
                                   class="col"
                                   v-model="filterCol"
@@ -219,7 +236,7 @@
               <q-td key="groups" :props="props">
                   {{ props.row.groups.map(g => g.name).toString() }}
                   <q-popup-edit :model-value="props.row.groups" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'groups', value.map(g => g.id))">
-                      <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="groups" option-value="id" option-label="name">
+                      <q-select style="min-width: 300px;" v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="groups" option-value="id" option-label="name">
                           <template v-slot:after>
                               <q-btn
                                       flat dense color="negative" icon="cancel"
@@ -237,7 +254,7 @@
               <q-td key="athletes" :props="props">
                 {{ props.row.athletes ? props.row.athletes.length : 0 }} <q-icon name="edit" />
                 <q-popup-edit :model-value="props.row.athletes" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'athletes', value.map(g => g.id))">
-                    <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="athletes" option-value="id" :option-label="(u) => u.firstname + ' ' + u.lastname">
+                    <q-select style="min-width: 300px;" v-model="scope.value" label="Teilnehmer" hint="Gefiltert nach Trainings-Gruppen" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="filterByGroups(athletes, props.row.groups)" option-value="id" :option-label="(u) => u.firstname + ' ' + u.lastname">
                         <template v-slot:after>
                             <q-btn
                                     flat dense color="negative" icon="cancel"
@@ -255,7 +272,7 @@
               <q-td key="coaches" :props="props">
                 {{ props.row.coaches.map(u => u.firstname + ' ' + u.lastname).toString() }}
                 <q-popup-edit :model-value="props.row.coaches" v-slot="scope" @save="(value) => updateTraining(props.row.id, 'coaches', value.map(g => g.id))">
-                    <q-select v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="coaches" option-value="id" :option-label="(u) => u.nickname ? u.nickname : u.firstname + ' ' + u.lastname">
+                    <q-select style="min-width: 300px;" label="Trainer" hint="Gefiltert nach Trainings-Gruppen"  v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="filterByGroups(coaches, props.row.groups)" option-value="id" :option-label="(u) => u.firstname + ' ' + u.lastname">
                         <template v-slot:after>
                             <q-btn
                                     flat dense color="negative" icon="cancel"
@@ -308,6 +325,7 @@ export default {
   setup() {
     const $q = useQuasar()
     const tableRef = ref()
+    const visibleColumns = ref(['id', 'name', 'date_start', 'date_end', 'status', 'groups', 'athletes', 'coaches', 'actions']);
     const filter = ref('')
     const filterCol = ref('name')
     const groupsSelection = ref(null);
@@ -346,6 +364,10 @@ export default {
     const athletes = computed(() => athletesResult.value?.users ?? [])
     const coaches = computed(() => coachesResult.value?.users ?? [])
 
+
+    const filterByGroups = (users, groups) => {
+          return users.filter(a => groups.some(({id}) => a.groups.map(ag => ag.id).includes(id)))
+    }
     const addToWhere = (variables, relation, value) => {
       if (!variables.where) {
           variables.where = {};
@@ -588,6 +610,8 @@ export default {
       athletes,
       coaches,
       date,
+      filterByGroups,
+      visibleColumns,
     }
   },
 }

@@ -1,10 +1,14 @@
 type Location @guard{
     id: ID!
     name: String
+    address: String
+    image: String
+    imageUrl: String
 }
 
 input LocationInput {
     name: String
+    address: String
 }
 
 extend type Query @guard {
@@ -29,6 +33,7 @@ extend type Query @guard {
 extend type Mutation @guard {
     createLocation(input: LocationInput  @spread): Location! @can(ability: "create") @create
     updateLocation(id: ID!, input: LocationInput  @spread): Location! @can(ability: "update") @update
+    uploadLocationImage(id: ID!, file: Upload! @rules(apply: ["required", "image", "max:5000"])): Location! @field(resolver: "\\App\\GraphQL\\Mutations\\UploadLocationImage")
     deleteLocation(id: ID! @where(operator: "=")): Location @delete @can(ability: "delete", find: "id")
 }
 

@@ -1,0 +1,38 @@
+query training($id: ID!) {
+    training(id: $id) {
+        id
+        name
+        description
+        status
+        date_start
+        date_end
+        location {
+            id
+            name
+            address
+            imageUrl
+        }
+        groups {
+            id
+            name
+        }
+        coaches {
+            id
+            firstname
+            lastname
+            imageUrl
+            pivot {
+                attendance
+            }
+        }
+        athletes {
+            id
+            firstname
+            lastname
+            imageUrl
+            pivot {
+                attendance
+            }
+        }
+    }
+}

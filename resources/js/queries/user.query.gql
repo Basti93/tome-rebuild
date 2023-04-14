@@ -1,0 +1,18 @@
+query getUser($id: ID!) {
+    user(id: $id) {
+        id
+        firstname
+        lastname
+        email
+        phone
+        imageUrl
+        groups {
+            id
+            name
+            pivot {
+                role
+            }
+        }
+
+    }
+}

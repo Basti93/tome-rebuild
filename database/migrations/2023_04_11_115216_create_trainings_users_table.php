@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('training_id')->constrained('trainings')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('role', ['athlete', 'coach']);
+            $table->boolean('attendance')->nullable();
             $table->timestamps();
         });
     }

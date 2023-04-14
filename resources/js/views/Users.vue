@@ -16,6 +16,7 @@
             @request="onRequest"
             dense
             binary-state-sort
+            :visible-columns="visibleColumns"
         >
           <template v-slot:top>
                 <div class="row full-width">
@@ -25,6 +26,22 @@
                     </div>
                     <div class="col self-center">
                         <div class="row">
+                            <q-select
+                                    v-model="visibleColumns"
+                                    multiple
+                                    outlined
+                                    dense
+                                    options-dense
+                                    class="q-pr-md col"
+                                    label="Spalten zum Anzeigen"
+                                    :display-value="$q.lang.table.columns"
+                                    emit-value
+                                    map-options
+                                    :options="columns.filter(c => c.name !== 'id' && c.name !== 'actions')"
+                                    option-value="name"
+                                    options-cover
+                                    style="min-width: 200px"
+                            />
                           <q-select
                                   class="col"
                                   v-model="filterCol"
@@ -262,10 +279,11 @@ export default {
   setup() {
     const $q = useQuasar()
     const tableRef = ref()
+    const visibleColumns = ref([ 'id', 'profile_image', 'firstname', 'lastname', 'birthdate', 'phone', 'approved', 'groups', 'actions' ]);
     const filter = ref('')
     const filterCol = ref('firstname')
     const approvedToggle = ref('all');
-    const roleToggle = ref('all');
+    const roleToggle = ref('3');
     const groupsSelection = ref(null);
     const rows = ref([])
     const loading = ref(false)
@@ -417,6 +435,15 @@ export default {
 
     const updateUser = (userId, field, value) => {
       loading.value = true;
+        if (field == 'groups') {
+            value = {
+                sync: value
+            }
+        } else if (field == 'roles') {
+            value = {
+                sync: value
+            }
+        }
       apolloClient.mutate({
         mutation: updateUsersMutation,
         variables: {id: userId, [field]: value}
@@ -517,6 +544,7 @@ export default {
       groups,
       date,
       computed,
+      visibleColumns,
     }
   },
 }

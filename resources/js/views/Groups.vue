@@ -54,6 +54,43 @@
                 </q-popup-edit>
               </q-td>
 
+              <q-td key="athletes" :props="props">
+                  {{ props.row.athletes ? props.row.athletes.length : 0 }} <q-icon name="edit" />
+                  <q-popup-edit :model-value="props.row.athletes" v-slot="scope" @save="(value) => updateGroup(props.row.id, 'athletes', value.map(g => g.id))">
+                      <q-select style="min-width: 300px;" v-model="scope.value" label="Mitglieder" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="athletes" option-value="id" :option-label="(u) => u.firstname + ' ' + u.lastname">
+                          <template v-slot:after>
+                              <q-btn
+                                      flat dense color="negative" icon="cancel"
+                                      @click.stop.prevent="scope.cancel"
+                              />
+
+                              <q-btn
+                                      flat dense color="positive" icon="check_circle"
+                                      @click.stop.prevent="scope.set"
+                              />
+                          </template>
+                      </q-select>
+                  </q-popup-edit>
+              </q-td>
+              <q-td key="coaches" :props="props">
+                  {{ props.row.coaches.map(u => u.firstname + ' ' + u.lastname).toString() }}
+                  <q-popup-edit :model-value="props.row.coaches" v-slot="scope" @save="(value) => updateGroup(props.row.id, 'coaches', value.map(g => g.id))">
+                      <q-select style="min-width: 300px;" label="Trainer" v-model="scope.value" multiple dense use-chips autofocus @keyup.enter="scope.set" :options="coaches" option-value="id" :option-label="(u) => u.firstname + ' ' + u.lastname">
+                          <template v-slot:after>
+                              <q-btn
+                                      flat dense color="negative" icon="cancel"
+                                      @click.stop.prevent="scope.cancel"
+                              />
+
+                              <q-btn
+                                      flat dense color="positive" icon="check_circle"
+                                      @click.stop.prevent="scope.set"
+                              />
+                          </template>
+                      </q-select>
+                  </q-popup-edit>
+              </q-td>
+
               <q-td key="actions" :props="props">
                   <q-btn round flat icon="more_vert">
                   <q-menu auto-close v-ripple >
@@ -100,10 +137,13 @@ import groupsPaginationQuery from "../queries/grouppagination.query.gql";
 import deleteGroupMutation from "../queries/groupdelete.mutation.gql";
 import createGroupMutation from "../queries/groupcreate.mutation.gql";
 import updateGroupsMutation from "../queries/groupupdate.mutation.gql";
-import { onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import apolloClient from "../apollo";
 import {date} from 'quasar'
 import { useQuasar } from 'quasar'
+import {useQuery} from "@vue/apollo-composable";
+import athletesQuery from "../queries/athletes.query.gql";
+import coachesQuery from "../queries/coaches.query.gql";
 
 
 export default {
@@ -127,39 +167,58 @@ export default {
     const columns = [
       {name: 'id', required: true, label: 'ID', align: 'left', field: 'id', sortable: true},
       {name: 'name', align: 'center', label: 'Name', field: 'name', sortable: true},
+      {name: 'athletes', align: 'center', label: 'Sportler', field: 'athletes', sortable: true,},
+      {name: 'coaches', align: 'center', label: 'Trainer', field: 'coaches', sortable: false,},
       {name: 'actions', align: 'center', label: 'Aktionen', field: '', sortable: false,},
     ]
+    const {result: athletesResult} = useQuery(athletesQuery);
+    const {result: coachesResult} = useQuery(coachesQuery);
+    const athletes = computed(() => athletesResult.value?.users ?? [])
+    const coaches = computed(() => coachesResult.value?.users ?? [])
 
     const onRequest = (props) => {
       loading.value = true
       const {page, rowsPerPage, sortBy, descending} = props.pagination
       // calculate starting row of data
       const filter = props.filter
-      const variables = ref({
+      const variables = {
         first: rowsPerPage,
         page: page,
-        orderBy: [
-            {
-                column: sortBy.toUpperCase(),
-                order: descending ? 'DESC' : 'ASC',
-            }
-        ]
-      });
+      };
+      if (sortBy) {
+          if (sortBy == 'athletes') {
+              variables.orderBy = [
+                  {
+                      athletes: { aggregate: 'COUNT' },
+                      order: descending ? 'DESC' : 'ASC',
+                  }
+              ]
+          } else {
+              variables.orderBy = [
+                  {
+                      column: sortBy.toUpperCase(),
+                      order: descending ? 'DESC' : 'ASC',
+                  }
+              ]
+          }
+
+      }
+
       if (filter) {
           if (filterCol.value === 'hasRole') {
-              variables.value[`${filterCol.value}`] = {
+              variables[`${filterCol.value}`] = {
                   column: 'NAME',
                   operator: 'LIKE',
                   value: filter
               }
           } else {
-              variables.value[`${filterCol.value}`] = "%" + filter + "%";
+              variables[`${filterCol.value}`] = "%" + filter + "%";
           }
       }
 
       apolloClient.query({
         query: groupsPaginationQuery,
-        variables: variables.value
+        variables: variables
       }).then(({data}) => {
           // update rowsCount with appropriate value
           pagination.value.rowsNumber = data.groupsPaginate.paginatorInfo.total
@@ -237,6 +296,24 @@ export default {
 
     const updateGroup = (groupId, field, value) => {
       loading.value = true;
+      if (field == 'athletes') {
+          value = {
+              sync:
+                  value.map(id => ({
+                      id: id,
+                      role: "athlete"
+                  }))
+          }
+      } else if (field == 'coaches') {
+          value = {
+              sync:
+                  value.map(id => ({
+                      id: id,
+                      role: "coach"
+                  }))
+          }
+      }
+
       apolloClient.mutate({
         mutation: updateGroupsMutation,
         variables: {id: groupId, [field]: value}
@@ -245,7 +322,7 @@ export default {
               message: 'Gruppe ' + data.updateGroup.name + ' aktualisiert',
               color: 'positive'})
           const index = rows.value.findIndex(row => row.id == data.updateGroup.id);
-          if (index > -1) { // only splice array when item is found
+          if (index > -1) {
               rows.value[index] = data.updateGroup
           }
       }).catch(() => {
@@ -279,6 +356,8 @@ export default {
       updateGroup,
       filterCol,
       editName,
+      coaches,
+      athletes,
       date,
     }
   },

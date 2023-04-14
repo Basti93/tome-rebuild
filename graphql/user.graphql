@@ -13,8 +13,10 @@ type User {
     image: String
     imageUrl: String
     roles: [Role!]! @belongsToMany
+    trainings: [Training!] @belongsToMany
     groups: [Group!]! @belongsToMany
     approved: Boolean!
+    pivot: TrainingUserPivot
 }
 
 type Image {
@@ -23,17 +25,17 @@ type Image {
 }
 
 input UpdateUserGroupInput {
-    sync: [ID!]
-    delete: [ID!]
-    connect: [ID!]
-    disconnect: [ID!]
+    sync: [ID!] @rules(apply: ["exists:groups,id"])
+    delete: [ID!] @rules(apply: ["exists:groups,id"])
+    connect: [ID!] @rules(apply: ["exists:groups,id"])
+    disconnect: [ID!] @rules(apply: ["exists:groups,id"])
 }
 
 input UpdateUserRoleInput {
-    sync: [ID!]
-    delete: [ID!]
-    connect: [ID!]
-    disconnect: [ID!]
+    sync: [ID!] @rules(apply: ["exists:roles,id"])
+    delete: [ID!] @rules(apply: ["exists:roles,id"])
+    connect: [ID!] @rules(apply: ["exists:roles,id"])
+    disconnect: [ID!] @rules(apply: ["exists:roles,id"])
 }
 
 input UpdateUserInput {
@@ -43,8 +45,8 @@ input UpdateUserInput {
     phone: String
     birthdate: Date
     email: String @rules(apply: ["bail", "email", "unique:users,email"])
-    roles: UpdateUserRoleInput @rules(apply: ["exists:roles,id"])
-    groups: UpdateUserGroupInput @rules(apply: ["exists:groups,id"])
+    roles: UpdateUserRoleInput
+    groups: UpdateUserGroupInput
 }
 
 input UserInput {
