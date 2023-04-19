@@ -1,20 +1,30 @@
 <template>
     <q-card flat bordered class="single-training" v-if="training">
-        <div class="absolute-top-right q-mt-lg q-mr-lg">
-            <q-btn v-if="isMeCoach" flat color="primary">
-                <q-icon name="edit" />
-            </q-btn>
-            <q-badge v-if="isMeCoach && training.status" color="positive">
-                Aktiv
-            </q-badge>
-            <q-badge v-else-if="isMeCoach && !training.status" color="negative">
-                Inaktiv
-            </q-badge>
-            <q-badge v-if="attending" color="positive" floating>Angemeldet</q-badge>
-        </div>
         <q-item>
             <q-item-section>
-                <q-item-label><div class="text-h6">{{training.name ? training.name : 'Training'}} - {{date.formatDate(training.date_start, 'ddd, DD.MM.YYYY')}}</div></q-item-label>
+                <q-item-label>
+                    <div class="row">
+                        <div class="col-6 text-h6">{{training.name ? training.name : 'Training'}} - {{date.formatDate(training.date_start, 'ddd, DD.MM.YYYY')}}</div>
+                        <div class="col-6 row justify-end">
+                            <q-btn
+                                v-if="isMeCoach"
+                                outline
+                                :color="training.status ? 'positive' : 'negative'"
+                                @click="toggleStatus"
+                            >
+                                {{ training.status ? 'Aktiv' : 'Inaktiv' }}
+                                <q-tooltip>Zum ändern klicken</q-tooltip>
+                            </q-btn>
+                            <q-btn v-if="isMeCoach" flat color="primary" @click="openEditDialog = true">
+                                <q-icon name="edit" />
+                            </q-btn>
+                            <q-btn v-if="isMeCoach" flat color="primary" @click="confirmDelete">
+                                <q-icon name="delete" />
+                            </q-btn>
+                            <q-badge v-if="attending" color="positive" outline floating>Angemeldet</q-badge>
+                        </div>
+                    </div>
+                </q-item-label>
                 <q-item-label v-if="training.description" caption>
                     <div class="text-subtitle-2 q-mb-sm">{{training.description}}</div>
                 </q-item-label>
@@ -61,7 +71,7 @@
                         </user-avatar>
                 </div>
                 <div class="absolute-bottom-right" style="background-color: transparent; font-size: 8px;">
-                    {{id}}
+                    {{trainingId}}
                 </div>
             </q-img>
         <q-expansion-item>
@@ -87,27 +97,51 @@
                 </q-list>
             </q-card-section>
         </q-expansion-item>
+        <q-dialog
+            v-model="openEditDialog"
+            maximized>
+            <q-card>
+                <q-card-section class="row items-center q-pb-none">
+                    <div class="text-h6">Training Bearbeiten</div>
+                    <q-space />
+                    <q-btn icon="close" flat round dense v-close-popup />
+                </q-card-section>
+                <q-card-section>
+                    <EditTraining :training-id="trainingId"
+                                  @cancel="openEditDialog = false"
+                                  @training-updated="trainingUpdated">
+
+                    </EditTraining>
+                </q-card-section>
+            </q-card>
+        </q-dialog>
     </q-card>
+
 </template>
 
 <script>
 import apolloClient from "../apollo";
 import trainingQuery from "../queries/training.query.gql";
 import attendTrainingMutation from "../queries/updatetrainingattendance.mutation.gql";
+import updateTrainingMutation from "../queries/trainingupdate.mutation.gql";
+import deleteTrainingMutation from "../queries/trainingdelete.mutation.gql";
 import {computed, ref} from "vue";
 import {date, useQuasar} from "quasar";
 import UserAvatar from "./UserAvatar.vue";
 import meQuery from "../queries/me.query.gql";
+import EditTraining from "./EditTraining.vue";
 
 export default {
     name: "SingleTraining",
-    components: {UserAvatar},
-    props: ['id'],
-    setup(props) {
+    components: {EditTraining, UserAvatar},
+    props: ['trainingId'],
+    emits: ["trainingDeleted", "trainingUpdated"],
+    setup(props, {emit}) {
         const $q = useQuasar()
         const me = ref(null);
         const training = ref(null);
         const loading = ref(false);
+        const openEditDialog = ref(false);
         const isMeCoach = computed(() => {
             if (me.value) {
                 if (training.value.coaches) {
@@ -170,13 +204,13 @@ export default {
             apolloClient.query({
                 query: trainingQuery,
                 variables: {
-                    id: props.id
+                    id: props.trainingId
                 }
             }).then(({data}) => {
                 training.value = data.training;
             }).catch((error) => {
                 $q.notify({
-                    message: 'Trainning mit id ' + props.id + ' konnte nicht geladen werden',
+                    message: 'Trainning mit id ' + props.trainingId + ' konnte nicht geladen werden',
                     type: 'negative'
                 });
             }).finally(() => {
@@ -212,6 +246,74 @@ export default {
             })
         }
 
+        const deleteTraining = () => {
+            loading.value = true;
+            apolloClient.mutate({
+                mutation: deleteTrainingMutation,
+                variables: {
+                    id: props.trainingId,
+                }
+            }).then(({data}) => {
+                $q.notify({
+                    message: 'Training erfolgreich gelöscht',
+                    type: 'positive'
+                });
+                emit('trainingDeleted', props.trainingId);
+            }).catch((error) => {
+                $q.notify({
+                    message: 'Training konnte nicht gelöscht werden',
+                    type: 'negative'
+                });
+            }).finally(() => {
+                loading.value = false;
+            })
+        };
+
+        const confirmDelete = () => {
+            $q.dialog({
+                title: 'Training löschen',
+                message: 'Möchtest du das Training wirklich löschen?',
+                cancel: true,
+                persistent: true
+            }).onOk(() => {
+                deleteTraining();
+            })
+        }
+
+        const trainingUpdated = (updatedTraining) => {
+            console.log(training)
+            openEditDialog.value = false
+            training.value = updatedTraining;
+        }
+
+        const toggleStatus = () => {
+            apolloClient.mutate({
+                mutation: updateTrainingMutation,
+                variables: {
+                    id: training.value.id,
+                    status: !training.value.status
+                }
+            }).then(({data}) => {
+                training.value = data.updateTraining;
+                $q.notify({
+                    message: 'Status erfolgreich geändert',
+                    type: 'positive'
+                });
+                emit('trainingUpdated', props.trainingId);
+            }).catch((error) => {
+                $q.notify({
+                    message: 'Status konnte nicht geändert werden',
+                    type: 'negative'
+                });
+            }).finally(() => {
+                loading.value = false;
+            })
+        }
+
+        const editTraining = () => {
+
+        }
+
         return {
             canAttend,
             training,
@@ -221,6 +323,11 @@ export default {
             me,
             isMeCoach,
             isMeAthleteInTraining,
+            confirmDelete,
+            toggleStatus,
+            editTraining,
+            openEditDialog,
+            trainingUpdated,
         }
     }
 }

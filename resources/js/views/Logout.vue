@@ -20,6 +20,7 @@ export default {
             mutation: logoutMutation
         }).then(() => {
             localStorage.removeItem('accessToken');
+            apolloClient.cache.reset()
             $q.notify({
                 message: 'Erfolgreich ausgeloggt!',
                 color: 'positive'})

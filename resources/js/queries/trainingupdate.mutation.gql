@@ -1,3 +1,5 @@
+#import "./fragments/training.fragment.gql"
+
 mutation updateTraining (
     $id: ID!,
     $name: String,
@@ -21,33 +23,6 @@ mutation updateTraining (
         coaches: $coaches,
         groups: $groups
     }) {
-        id
-        name
-        description
-        status
-        date_start
-        date_end
-        location {
-            id
-            name
-        }
-        groups {
-            id
-            name
-        }
-        coaches {
-            id
-            firstname
-            lastname
-            nickname
-            imageUrl
-        }
-        athletes {
-            id
-            firstname
-            lastname
-            nickname
-            imageUrl
-        }
+        ...TrainingFragment
     }
 }

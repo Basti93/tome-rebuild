@@ -66,6 +66,7 @@ input UpdateTrainingGroupInput {
 input ConnectTrainingUser {
     id: ID!
     role: TrainingRole
+    attendance: Boolean
 }
 
 enum TrainingRole {

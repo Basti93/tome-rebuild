@@ -82,7 +82,7 @@ class PermissionSeeder extends Seeder
         $this->sync($athlete, $configPermission);
         $this->sync($athlete, $trainingPermission);
 
-        User::whereEmail(env('MAIL_FROM_ADMIN'))->first()->assignRole(['admin', 'coach', 'athlete']);
+        User::whereEmail(env('MAIL_FROM_ADMIN'))->first()->assignRole(['admin']);
         if (env('APP_DEBUG')) {
             User::whereEmail(env('MAIL_FROM_TEST_TRAINER'))->first()->assignRole('coach');
             User::whereEmail(env('MAIL_FROM_TEST_USER'))->first()->assignRole('athlete');

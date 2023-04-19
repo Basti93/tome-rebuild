@@ -16,7 +16,7 @@
                     align="justify"
                 >
                     <q-tab name="coachTrainings" label="Als Trainer" />
-                    <q-tab name="athleteTrainings" label="Als Sportler" />
+                    <q-tab v-if="upcomingTrainingsCoach.length > 0" name="athleteTrainings" label="Als Sportler" />
                 </q-tabs>
 
                 <q-separator />
@@ -27,8 +27,9 @@
                         <single-training
                             class="col-12 col-lg-5 q-ma-md"
                             v-for="training in upcomingTrainingsCoach"
+                            v-on:trainingDeleted="trainingDeleted"
                             :key="training.id"
-                            :id="training.id"/>
+                            :trainingId="training.id"/>
                     </q-tab-panel>
 
                     <q-tab-panel name="athleteTrainings" class="q-pa-none row justify-center">
@@ -37,7 +38,7 @@
                             class="col-12 col-lg-5 q-ma-md"
                             v-for="training in upcomingTrainingsAthlete"
                             :key="training.id"
-                            :id="training.id"/>
+                            :trainingId="training.id"/>
                     </q-tab-panel>
                 </q-tab-panels>
 
@@ -95,6 +96,10 @@ export default {
 
         fetchUpcomingTrainings();
 
+        const trainingDeleted = (id) => {
+            upcomingTrainingsCoach.value = upcomingTrainingsCoach.value.filter(t => t.id != id);
+        }
+
         return {
             upcomingTrainingsAthlete,
             upcomingTrainingsCoach,
@@ -102,6 +107,7 @@ export default {
             trainingsTab,
             meIsCoach,
             meIsAthlete,
+            trainingDeleted,
         }
     }
 }

@@ -33,7 +33,17 @@ class Training extends Model
 
     public function athletes(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'trainings_users')->wherePivot('role', 'athlete')->withPivot('attendance');
+        return $this->belongsToMany(User::class, 'trainings_users')->withPivotValue('role', 'athlete')->withPivot('attendance');
+    }
+
+    public function athletesAttending(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'trainings_users')->withPivotValue('role', 'athlete')->withPivotValue('attendance', true);
+    }
+
+    public function athletesNotAttending(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'trainings_users')->withPivotValue('role', 'athlete')->withPivotValue('attendance', false);
     }
 
     public function coaches(): BelongsToMany

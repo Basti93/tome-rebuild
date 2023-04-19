@@ -49,7 +49,7 @@ class TrainingPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, $args): bool
+    public function update(User $user): bool
     {
         return $user->hasPermissionTo('edit-training');
     }
