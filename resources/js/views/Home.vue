@@ -6,6 +6,7 @@
                     <div class="text-h6">Herzlich Willkommen {{me.firstname}}</div>
                     <div class="text-subtitle-1">Hier findest du alle deine kommenden Trainings</div>
                 </q-card-section>
+
                 <q-tabs
                     v-if="meIsCoach && meIsAthlete"
                     v-model="trainingsTab"
@@ -16,7 +17,7 @@
                     align="justify"
                 >
                     <q-tab name="coachTrainings" label="Als Trainer" />
-                    <q-tab v-if="upcomingTrainingsCoach.length > 0" name="athleteTrainings" label="Als Sportler" />
+                    <q-tab name="athleteTrainings" label="Als Sportler" />
                 </q-tabs>
 
                 <q-separator />
@@ -24,21 +25,21 @@
                 <q-tab-panels v-model="trainingsTab" animated>
                     <q-tab-panel name="coachTrainings" class="row justify-center">
                         <div class="col-12 text-h6 q-pt-md" style="text-align:center;">{{upcomingTrainingsCoach.length}} Trainings</div>
-                        <single-training
+                        <training-card
                             class="col-12 col-lg-5 q-ma-md"
                             v-for="training in upcomingTrainingsCoach"
                             v-on:trainingDeleted="trainingDeleted"
                             :key="training.id"
-                            :trainingId="training.id"/>
+                            :training="training"/>
                     </q-tab-panel>
 
                     <q-tab-panel name="athleteTrainings" class="q-pa-none row justify-center">
                         <div class="col-12 text-h6 q-pt-md" style="text-align:center;">{{upcomingTrainingsAthlete.length}} Trainings</div>
-                        <single-training
+                        <training-card
                             class="col-12 col-lg-5 q-ma-md"
                             v-for="training in upcomingTrainingsAthlete"
                             :key="training.id"
-                            :trainingId="training.id"/>
+                            :training="training" />
                     </q-tab-panel>
                 </q-tab-panels>
 
@@ -50,30 +51,30 @@
     </q-page>
 </template>
 <script>
-import SingleTraining from "../components/SingleTraining.vue";
+import TrainingCard from "../components/TrainingCard.vue";
 import apolloClient from "../apollo";
 import meQuery from "../queries/me.query.gql";
 import {computed, ref} from "vue";
 import {useQuasar} from "quasar";
 
 export default {
-    components: {SingleTraining},
+    components: {TrainingCard},
 
     setup() {
         const $q = useQuasar();
-        const trainingsTab = ref('athletesTrainings');
+        const trainingsTab = ref('athleteTrainings');
         const upcomingTrainingsAthlete = ref(null);
         const upcomingTrainingsCoach = ref(null);
         const me = ref(null);
         const meIsCoach = computed(() => {
             if (me.value) {
-                return me.value.roles.find(r => r.name === 'coach');
+                return me.value.roles.some(r => r.name === 'coach');
             }
             return false;
         });
         const meIsAthlete = computed(() => {
             if (me.value) {
-                return me.value.roles.find(r => r.name === 'athlete');
+                return me.value.roles.some(r => r.name === 'athlete');
             }
             return false;
         });

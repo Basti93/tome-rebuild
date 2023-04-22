@@ -1,0 +1,9 @@
+documents: '**/*.{graphql,gql}'
+extensions:
+  endpoints:
+    Default GraphQL Endpoint:
+      url: http://localhost:8000/graphql
+      headers:
+        user-agent: JS GraphQL
+        Authorization: bearer ${TOKEN}
+      introspect: false

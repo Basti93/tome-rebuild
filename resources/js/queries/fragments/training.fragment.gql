@@ -33,4 +33,6 @@ fragment TrainingFragment on Training {
             attendance
         }
     }
+    created_at
+    updated_at
 }

@@ -1,0 +1,5 @@
+mutation beamsAuth($userId: ID!) {
+  beamsAuth(id: $userId) {
+    token
+  }
+}

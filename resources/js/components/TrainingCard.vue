@@ -1,18 +1,18 @@
 <template>
-    <q-card flat bordered class="single-training" v-if="training">
+    <q-card flat bordered class="training-card" v-if="trainingData">
         <q-item>
             <q-item-section>
                 <q-item-label>
                     <div class="row">
-                        <div class="col-6 text-h6">{{training.name ? training.name : 'Training'}} - {{date.formatDate(training.date_start, 'ddd, DD.MM.YYYY')}}</div>
+                        <div class="col-6 text-h6">{{trainingData.name ? trainingData.name : 'Training'}} - {{date.formatDate(trainingData.date_start, 'ddd, DD.MM.YYYY')}}</div>
                         <div class="col-6 row justify-end">
                             <q-btn
                                 v-if="isMeCoach"
                                 outline
-                                :color="training.status ? 'positive' : 'negative'"
+                                :color="trainingData.status ? 'positive' : 'negative'"
                                 @click="toggleStatus"
                             >
-                                {{ training.status ? 'Aktiv' : 'Inaktiv' }}
+                                {{ trainingData.status ? 'Aktiv' : 'Inaktiv' }}
                                 <q-tooltip>Zum ändern klicken</q-tooltip>
                             </q-btn>
                             <q-btn v-if="isMeCoach" flat color="primary" @click="openEditDialog = true">
@@ -21,26 +21,29 @@
                             <q-btn v-if="isMeCoach" flat color="primary" @click="confirmDelete">
                                 <q-icon name="delete" />
                             </q-btn>
+                            <q-btn outline color="primary" :to="'/training/' + trainingData.id">
+                                <q-icon name="pageview" />
+                            </q-btn>
                             <q-badge v-if="attending" color="positive" outline floating>Angemeldet</q-badge>
                         </div>
                     </div>
                 </q-item-label>
-                <q-item-label v-if="training.description" caption>
-                    <div class="text-subtitle-2 q-mb-sm">{{training.description}}</div>
+                <q-item-label v-if="trainingData.description" caption>
+                    <div class="text-subtitle-2 q-mb-sm">{{trainingData.description}}</div>
                 </q-item-label>
             </q-item-section>
         </q-item>
         <q-separator />
         <q-card-actions>
             <q-chip icon="event">
-                {{ date.formatDate(training.date_start, 'HH:mm') }} bis {{ date.formatDate(training.date_end, 'HH:mm') }} Uhr
+                {{ date.formatDate(trainingData.date_start, 'HH:mm') }} bis {{ date.formatDate(trainingData.date_end, 'HH:mm') }} Uhr
             </q-chip>
-            <q-item-label><q-chip icon="pin_drop">{{training.location.name}}<q-tooltip anchor="bottom middle">{{training.location.address}}</q-tooltip></q-chip></q-item-label>
-            <q-btn v-if="isMeAthleteInTraining && canAttend" flat color="positive" @click="updateAttendance(id, true)">
+            <q-item-label><q-chip icon="pin_drop">{{trainingData.location.name}}<q-tooltip anchor="bottom middle">{{trainingData.location.address}}</q-tooltip></q-chip></q-item-label>
+            <q-btn v-if="isMeAthleteInTraining && canAttend" flat color="positive" @click="updateAttendance(trainingData.id, true)">
                 Anmelden
                 <q-tooltip>24 Stunden vor dem Training wirst du automatisch angemeldet.</q-tooltip>
             </q-btn>
-            <q-btn v-if="isMeAthleteInTraining && !canAttend" flat color="negative" @click="updateAttendance(id, false)">
+            <q-btn v-if="isMeAthleteInTraining && !canAttend" flat color="negative" @click="updateAttendance(trainingData.id, false)">
                 Abmelden
                 <q-tooltip>Bei Abmeldung 24 Stunden vor dem Training muss ein Grund angegeben werden.</q-tooltip>
             </q-btn>
@@ -48,66 +51,43 @@
         <q-separator />
         <q-img
                 style="background-color: #f5f5f5"
-                :src="training.location.imageUrl"
+                :src="trainingData.location.imageUrl"
                 height="300px"
             >
-                <div class="absolute-bottom">
-                    <div class="text-caption">Trainer</div>
+            <div class="absolute-bottom">
+                <div class="text-caption">Trainer</div>
+                <user-avatar
+                    class="q-mr-sm q-mt-sm"
+                    v-for="coach in trainingData.coaches"
+                    :key="coach.id"
+                    :user="coach"
+                />
+                <div class="text-caption">Teilnehmer ({{trainingData.athletes.filter(a => a.pivot.attendance).length}}/{{trainingData.athletes.length}})</div>
                     <user-avatar
-                        class="q-mr-sm q-mt-sm"
-                        v-for="coach in training.coaches"
-                        :key="coach.id"
-                        :user="coach"
-                    />
-                    <div class="text-caption">Teilnehmer ({{training.athletes.filter(a => a.pivot.attendance).length}}/{{training.athletes.length}})</div>
-                        <user-avatar
-                            v-for="(athlete, index) in training.athletes"
-                            size="40px"
-                            :key="athlete.id"
-                            :user="athlete"
-                            :badge-check="athlete.pivot.attendance"
-                            :badge-cancel="!athlete.pivot.attendance"
-                        >
-                        </user-avatar>
-                </div>
-                <div class="absolute-bottom-right" style="background-color: transparent; font-size: 8px;">
-                    {{trainingId}}
-                </div>
-            </q-img>
-        <q-expansion-item>
-            <template v-slot:header>
-                <div class="text-h6">Details</div>
-            </template>
-            <q-card-section>
-                <q-list dense bordered padding>
-                    <q-item-label header>Gruppen</q-item-label>
-                    <q-item v-ripple v-for="group in training.groups" :key="group.id">
-                        <q-item-section>
-                            <q-item-label>{{group.name}}</q-item-label>
-                        </q-item-section>
-                    </q-item>
-                </q-list>
-                <q-list dense bordered padding>
-                    <q-item-label header>Teilnehmer</q-item-label>
-                    <q-item v-ripple v-for="athlete in training.athletes" :key="athlete.id">
-                        <q-item-section>
-                            <q-item-label>{{athlete.firstname + ' ' + athlete.lastname}}</q-item-label>
-                        </q-item-section>
-                    </q-item>
-                </q-list>
-            </q-card-section>
-        </q-expansion-item>
+                        v-for="(athlete, index) in trainingData.athletes"
+                        size="40px"
+                        :key="athlete.id"
+                        :user="athlete"
+                        :badge-check="athlete.pivot.attendance"
+                        :badge-cancel="!athlete.pivot.attendance"
+                    >
+                    </user-avatar>
+            </div>
+            <div class="absolute-bottom-right" style="background-color: transparent; font-size: 8px;">
+                {{trainingData.id}}
+            </div>
+        </q-img>
         <q-dialog
             v-model="openEditDialog"
             maximized>
             <q-card>
                 <q-card-section class="row items-center q-pb-none">
-                    <div class="text-h6">Training Bearbeiten</div>
+                    <div class="text-h6">Training {{trainingData.id}} bearbeiten</div>
                     <q-space />
                     <q-btn icon="close" flat round dense v-close-popup />
                 </q-card-section>
                 <q-card-section>
-                    <EditTraining :training-id="trainingId"
+                    <EditTraining :training-id="trainingData.id"
                                   @cancel="openEditDialog = false"
                                   @training-updated="trainingUpdated">
 
@@ -132,48 +112,48 @@ import meQuery from "../queries/me.query.gql";
 import EditTraining from "./EditTraining.vue";
 
 export default {
-    name: "SingleTraining",
+    name: "TrainingCard",
     components: {EditTraining, UserAvatar},
-    props: ['trainingId'],
+    props: ['trainingId', 'training'],
     emits: ["trainingDeleted", "trainingUpdated"],
     setup(props, {emit}) {
         const $q = useQuasar()
         const me = ref(null);
-        const training = ref(null);
+        const trainingData = ref(null);
         const loading = ref(false);
         const openEditDialog = ref(false);
         const isMeCoach = computed(() => {
             if (me.value) {
-                if (training.value.coaches) {
-                    return training.value.coaches.find(c => c.id === me.value.id);
+                if (trainingData.value.coaches) {
+                    return trainingData.value.coaches.some(c => c.id === me.value.id);
                 }
             }
             return false;
         });
 
         const checkTrainingIsInFuture = () => {
-            if (training.value) {
+            if (trainingData.value) {
                 const now = new Date();
-                const start = new Date(training.value.date_start);
-                const end = new Date(training.value.date_end);
+                const start = new Date(trainingData.value.date_start);
+                const end = new Date(trainingData.value.date_end);
                 return now < start && now < end;
             }
             return false;
         }
 
         const isMeAthleteInTraining = computed(() => {
-            if (training.value) {
-                if (training.value.athletes) {
-                    return training.value.athletes.find(a => a.id === me.value.id);
+            if (trainingData.value) {
+                if (trainingData.value.athletes) {
+                    return trainingData.value.athletes.some(a => a.id === me.value.id);
                 }
             }
             return false;
         });
 
         const attending = computed(() => {
-            if (training.value) {
-                if (training.value.athletes) {
-                    const athlete = training.value.athletes.find(a => a.id === me.value.id);
+            if (trainingData.value) {
+                if (trainingData.value.athletes) {
+                    const athlete = trainingData.value.athletes.find(a => a.id === me.value.id);
                     if (athlete) {
                         return athlete.pivot.attendance != null ? athlete.pivot.attendance : false;
                     }
@@ -200,14 +180,13 @@ export default {
         }
         const fetchTraining = async () => {
             loading.value = true;
-            await fetchMe();
             apolloClient.query({
                 query: trainingQuery,
                 variables: {
                     id: props.trainingId
                 }
             }).then(({data}) => {
-                training.value = data.training;
+                trainingData.value = data.training;
             }).catch((error) => {
                 $q.notify({
                     message: 'Trainning mit id ' + props.trainingId + ' konnte nicht geladen werden',
@@ -218,7 +197,14 @@ export default {
             })
         }
 
-        fetchTraining();
+        fetchMe().then(() => {
+                if (!props.training) {
+                    fetchTraining();
+                } else {
+                    trainingData.value = props.training;
+                }
+            }
+        );
 
 
         const updateAttendance = (id, attend) => {
@@ -231,7 +217,7 @@ export default {
                     attend: attend,
                 }
             }).then(({data}) => {
-                training.value = data.updateTrainingAttendance;
+                trainingData.value = data.updateTrainingAttendance;
                 $q.notify({
                     message: 'Du hast dich erfolgreich ' + attendString,
                     type: 'positive'
@@ -251,14 +237,14 @@ export default {
             apolloClient.mutate({
                 mutation: deleteTrainingMutation,
                 variables: {
-                    id: props.trainingId,
+                    id: trainingData.id,
                 }
             }).then(({data}) => {
                 $q.notify({
                     message: 'Training erfolgreich gelöscht',
                     type: 'positive'
                 });
-                emit('trainingDeleted', props.trainingId);
+                emit('trainingDeleted', trainingData.id);
             }).catch((error) => {
                 $q.notify({
                     message: 'Training konnte nicht gelöscht werden',
@@ -281,25 +267,25 @@ export default {
         }
 
         const trainingUpdated = (updatedTraining) => {
-            console.log(training)
+            console.log(trainingData)
             openEditDialog.value = false
-            training.value = updatedTraining;
+            trainingData.value = updatedTraining;
         }
 
         const toggleStatus = () => {
             apolloClient.mutate({
                 mutation: updateTrainingMutation,
                 variables: {
-                    id: training.value.id,
-                    status: !training.value.status
+                    id: trainingData.value.id,
+                    status: !trainingData.value.status
                 }
             }).then(({data}) => {
-                training.value = data.updateTraining;
+                trainingData.value = data.updateTraining;
                 $q.notify({
                     message: 'Status erfolgreich geändert',
                     type: 'positive'
                 });
-                emit('trainingUpdated', props.trainingId);
+                emit('trainingUpdated', trainingData.id);
             }).catch((error) => {
                 $q.notify({
                     message: 'Status konnte nicht geändert werden',
@@ -316,7 +302,7 @@ export default {
 
         return {
             canAttend,
-            training,
+            trainingData,
             updateAttendance,
             date,
             attending,

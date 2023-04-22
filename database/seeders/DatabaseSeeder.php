@@ -25,5 +25,25 @@ class DatabaseSeeder extends Seeder
         Location::factory(1)->create();
         User::factory(50)->create();
         Training::factory(200)->create();
+
+        $trainer = User::whereEmail(env('MAIL_FROM_TEST_TRAINER'))->first();
+        $user = User::whereEmail(env('MAIL_FROM_TEST_USER'))->first();
+        $trainer->groups()->attach(1, ['role' => 'coach']);
+        $trainer->groups()->attach(1, ['role' => 'athlete']);
+        $user->groups()->attach(1, ['role' => 'athlete']);
+
+        $trainingsWithGroup = Training::whereHas('groups', function ($query) {
+            $query->whereGroupId(1);
+        });
+        $i = 0;
+        foreach ($trainingsWithGroup->get() as $training) {
+            $training->coaches()->attach($trainer->id);
+            $training->athletesAttending()->attach($user->id);
+            $training->athletesAttending()->attach($trainer->id);
+            if ($i == 20) {
+                break;
+            }
+            $i++;
+        }
     }
 }

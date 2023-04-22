@@ -114,19 +114,37 @@
                     </q-form>
                 </q-card-section>
               </q-card>
+          <q-card class="col-12 col-lg-3 q-mt-md q-ml-lg-sm">
+              <q-card-section>
+                <div class="text-h6">Benachrichtigungen</div>
+              </q-card-section>
+              <q-card-section>
+                  <q-toggle
+                          v-model="editMe.notifications.trainingCanceled"
+                          label="Training abgesagt 24 Stunden vor Trainingsbeginn"
+                          color="primary"
+                          :disable="loading"></q-toggle>
+                  <q-toggle
+                          v-model="editMe.notifications.trainingLocationChanged"
+                          label="Trainingsort geändert 24 Stunden vor Trainingsbeginn"
+                          color="primary"
+                          :disable="loading"></q-toggle>
+              </q-card-section>
+          </q-card>
       </div>
   </q-page>
 
 </template>
 <script lang="ts">
 
-import {computed, ref} from "vue";
+import {computed, reactive, ref, watch} from "vue";
 import updatepassword from "../queries/updatepassword.mutation.gql";
 import {date, useQuasar} from "quasar";
 import apolloClient from "../apollo";
 import meQuery from "../queries/me.query.gql";
 import meMutation from "../queries/me.mutation.gql";
 import uploadProfileImageMutation from "../queries/uploadprofileimage.mutation.gql";
+import {useNotifications} from "../notifications";
 
 export default {
   emits: ["user-updated"],
@@ -135,7 +153,17 @@ export default {
     const $q = useQuasar();
     const me = ref({})
     const uploadProfileImageForm = ref(null);
-    const editMe = ref({})
+    const editMe = ref({
+      firstname: '',
+      lastname: '',
+      nickname: '',
+      email: '',
+      birthdate: '',
+      phone: '',
+      notifications: {
+        trainingCanceled: false,
+        trainingLocationChanged: false
+      }})
     const profileImageUpload = ref(null);
     const passwordForm = ref('');
     const current_password = ref('');
@@ -144,17 +172,28 @@ export default {
     const passwordValidationErrors = ref('');
     const profileValidationErrors = ref('');
 
-      const fetchMe = () => {
+    watch(editMe, () => {
+        if (editMe.value.notifications) {
+            if (editMe.value.notifications.trainingCanceled) {
+
+            }
+        }
+    }, {deep: true})
+
+    const fetchMe = () => {
         loading.value = true;
         apolloClient.query({query: meQuery, fetchPolicy: "network-only"})
         .then(({data}) => {
             updateUserObjects(data.me);
-        }).catch(() => {
-            localStorage.removeItem('accessToken');
-            $q.notify({
-                type: 'negative',
-                message: 'Fehler beim Laden des Benutzers'
-            })
+        }).catch(({graphQLErrors}) => {
+            if (graphQLErrors && graphQLErrors.some(e => e.message === 'Unauthenticated.')) {
+                localStorage.removeItem('accessToken')
+                window.location.href = '/#/login'
+                $q.notify({
+                    type: 'negative',
+                    message: 'Fehler beim Laden des Benutzers'
+                })
+            }
         })
         loading.value = false;
     }
@@ -192,6 +231,10 @@ export default {
       const updateUserObjects = (user) => {
           me.value = user;
           editMe.value = {...me.value};
+          editMe.value.notifications = {
+              trainingCanceled: true,
+              trainingLocationChanged: true,
+          };
           editMe.value.birthdate = date.formatDate(editMe.value.birthdate, 'YYYY-MM-DD')
           emit('user-updated');
       }
@@ -229,7 +272,7 @@ export default {
           })
       }
       const resetMe = () => {
-          editMe.value = {...me.value};
+          editMe.value = Object.assign(me.value);
       }
 
       const uploadProfileImage = () => {

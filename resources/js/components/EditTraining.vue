@@ -84,6 +84,20 @@
         </div>
         <div class="row">
             <q-select
+                v-if="!trainingId"
+                class="col-lg-6 col-12 q-pa-sm"
+                v-model="editTraining.athletes"
+                label="Zugewiesene Sportler*innen"
+                filled
+                multiple
+                dense
+                use-chips
+                :options="filterByGroups(athletes, editTraining.groups)"
+                option-value="id"
+                :option-label="opt => opt.firstname + ' ' + opt.lastname">
+            </q-select>
+            <q-select
+                    v-if="trainingId"
                     class="col-lg-6 col-12 q-pa-sm"
                     v-model="editTraining.athletesAttending"
                     label="Teilnehmer"
@@ -96,6 +110,7 @@
                     :option-label="opt => opt.firstname + ' ' + opt.lastname">
             </q-select>
             <q-select
+                    v-if="trainingId"
                     class="col-lg-6 col-12 q-pa-sm"
                     v-model="editTraining.athletesNotAttending"
                     label="Absagen oder noch nicht zugesagt"
@@ -136,6 +151,7 @@ import coachesQuery from "../queries/coaches.query.gql";
 import groupsQuery from "../queries/groups.query.gql";
 import {date, useQuasar} from "quasar";
 import updateTrainingsMutation from "../queries/trainingupdate.mutation.gql";
+import createTrainingsMutation from "../queries/trainingcreate.mutation.gql";
 import {filterByGroups} from "../helpers/userhelper";
 import {useQuery} from "@vue/apollo-composable";
 
@@ -154,6 +170,8 @@ export default {
             startTime: null,
             endTime: null,
             location: null,
+            athletesAttending: [],
+            athletesNotAttending: [],
             athletes: [],
             coaches: [],
             groups: [],
@@ -171,31 +189,37 @@ export default {
         const pickableNotAttendingAthletes = computed(() => filterByGroups(athletes.value, editTraining.groups)
             .filter(a => editTraining.athletesAttending.filter(an => a.id === an.id).length === 0))
 
-        apolloClient.query({
-            query: trainingQuery,
-            variables: {
-                id: props.trainingId
-            }
-        }).then(({data}) => {
-            editTraining.name = data.training.name;
-            editTraining.description = data.training.description;
-            editTraining.status = data.training.status;
-            editTraining.date = date.formatDate(data.training.date_start, 'YYYY-MM-DD');
-            editTraining.start_time = date.formatDate(data.training.date_start, 'HH:mm');
-            editTraining.end_time = date.formatDate(data.training.date_end, 'HH:mm');
-            editTraining.location = data.training.location;
-            editTraining.groups = data.training.groups;
-            editTraining.athletesAttending = data.training.athletes.filter(a => a.pivot.attendance);
-            editTraining.athletesNotAttending = data.training.athletes.filter(a => !a.pivot.attendance);
-            editTraining.coaches = data.training.coaches;
-        }).catch(() => {
-            $q.notify({
-                type: 'negative',
-                message: 'Fehler beim Laden des Trainings'
+        const fetchTraining = () => {
+            apolloClient.query({
+                query: trainingQuery,
+                variables: {
+                    id: props.trainingId
+                }
+            }).then(({data}) => {
+                editTraining.name = data.training.name;
+                editTraining.description = data.training.description;
+                editTraining.status = data.training.status;
+                editTraining.date = date.formatDate(data.training.date_start, 'YYYY-MM-DD');
+                editTraining.start_time = date.formatDate(data.training.date_start, 'HH:mm');
+                editTraining.end_time = date.formatDate(data.training.date_end, 'HH:mm');
+                editTraining.location = data.training.location;
+                editTraining.groups = data.training.groups;
+                editTraining.athletesAttending = data.training.athletes.filter(a => a.pivot.attendance);
+                editTraining.athletesNotAttending = data.training.athletes.filter(a => !a.pivot.attendance);
+                editTraining.coaches = data.training.coaches;
+            }).catch(() => {
+                $q.notify({
+                    type: 'negative',
+                    message: 'Fehler beim Laden des Trainings'
+                })
             })
-        })
+        }
 
-        const updateOrCreateTraining = () => {
+        if (props.trainingId) {
+            fetchTraining();
+        }
+
+        const updateTraining = () => {
             loading.value = true;
             apolloClient.mutate({
                 mutation: updateTrainingsMutation,
@@ -246,6 +270,62 @@ export default {
             }).finally(() => {
                 loading.value = false;
             })
+        }
+
+        const createTraining = () => {
+            loading.value = true;
+            apolloClient.mutate({
+                mutation: createTrainingsMutation,
+                variables: {
+                    name: editTraining.name,
+                    description: editTraining.description,
+                    status: editTraining.status,
+                    date_start: date.formatDate(new Date(editTraining.date + 'T' + editTraining.start_time), 'YYYY-MM-DD HH:mm:ss'),
+                    date_end: date.formatDate(new Date(editTraining.date + 'T' + editTraining.end_time), 'YYYY-MM-DD HH:mm:ss'),
+                    location: {
+                        connect: editTraining.location.id
+                    },
+                    athletes: {
+                        sync:
+                            editTraining.athletes.map(a => ({
+                                id: a.id,
+                                role: "athlete"
+                            }))
+                    },
+                    coaches: {
+                        sync:
+                            editTraining.coaches.map(c => ({
+                                id: c.id,
+                                role: "coach"
+                            }))
+                    },
+                    groups: {
+                        sync: editTraining.groups.map(g => g.id)
+                    },
+                }
+            }).then(({data}) => {
+                emit('trainingCreated', data.createTraining)
+                $q.notify({
+                    message: 'Training ' + data.createTraining.id + ' erstellt',
+                    color: 'positive'
+                })
+            }).catch(() => {
+                $q.notify({
+                    message: 'Training konnte nicht erstellt werden',
+                    color: 'negative'
+                })
+            }).finally(() => {
+                loading.value = false;
+            })
+
+        };
+
+        const updateOrCreateTraining = () => {
+            if (props.trainingId) {
+                updateTraining();
+            } else {
+                createTraining();
+            }
         }
 
 

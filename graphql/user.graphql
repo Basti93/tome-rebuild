@@ -26,6 +26,10 @@ type Image {
     url: String!
 }
 
+type BeamsToken {
+    token: String!
+}
+
 input UpdateUserGroupInput {
     sync: [ID!] @rules(apply: ["exists:groups,id"])
     delete: [ID!] @rules(apply: ["exists:groups,id"])
@@ -108,6 +112,7 @@ type Query @guard {
 }
 
 extend type Mutation @guard {
+    beamsAuth(id: ID!): BeamsToken @field(resolver: "\\App\\GraphQL\\Mutations\\BeamsAuth")
     "Update the authenticated user."
     updateMe(input: UpdateMeInput  @spread): User! @can(ability: "updateMe", injectArgs: true, model: "App\\Models\\User") @update
     "Update a user by ID."

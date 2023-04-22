@@ -6,12 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Spatie\Permission\PermissionRegistrar;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Training extends Model
 {
-    use HasFactory;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -20,11 +19,22 @@ class Training extends Model
     protected $fillable = [
         'name',
         'description',
-        'start_date',
-        'end_date',
-        'location_id',
         'status',
+        'date_start',
+        'date_end',
+        'location',
+        'users',
+        'groups',
     ];
+
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'description', 'status', 'date_start', 'date_end', 'location'])
+            ->logOnlyDirty();
+    }
 
     public function users(): BelongsToMany
     {
@@ -48,7 +58,7 @@ class Training extends Model
 
     public function coaches(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'trainings_users')->wherePivot('role', 'coach')->withPivot('attendance');
+        return $this->belongsToMany(User::class, 'trainings_users')->withPivotValue('role', 'coach')->withPivot('attendance');
     }
 
     public function groups(): BelongsToMany
@@ -60,4 +70,5 @@ class Training extends Model
     {
         return $this->belongsTo(Location::class);
     }
+
 }

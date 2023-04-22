@@ -61,6 +61,7 @@
                                         <q-icon name="search"/>
                                     </template>
                                 </q-input>
+                                <q-btn class="col-auto q-ml-md" color="primary" label="Neues Training" @click="createTraining"/>
                             </div>
                         </div>
                     </div>
@@ -74,7 +75,7 @@
                             label="Filtereinstellungen"
                             caption="Nach Gruppe, Serienterminen und Rollen filtern"
                     >
-                        <q-card flat bordered>
+                        <q-card flat bordered class="full-width">
                             <div class="row q-ma-lg-lg">
                                 <div class="col-12 col-lg-5 q-pa-md">
                                     <q-select
@@ -303,6 +304,12 @@
                                         </q-item-section>
                                         <q-item-section>Bearbeiten</q-item-section>
                                     </q-item>
+                                    <q-item clickable :to="'/training/' + props.row.id">
+                                        <q-item-section avatar>
+                                            <q-icon name="pageview"/>
+                                        </q-item-section>
+                                        <q-item-section>Details</q-item-section>
+                                    </q-item>
                                     <q-item clickable @click="confirmDelete(props.row)">
                                         <q-item-section avatar>
                                             <q-icon name="person_remove"/>
@@ -322,7 +329,7 @@
                 maximized>
             <q-card>
                 <q-card-section class="row items-center q-pb-none">
-                    <div class="text-h6">Training {{ editTrainingId ? 'Bearbeiten' : 'Anlegen' }}</div>
+                    <div class="text-h6">Training {{ editTrainingId ? editTrainingId + ' bearbeiten' : 'anlegen' }}</div>
                     <q-space/>
                     <q-btn icon="close" flat round dense v-close-popup/>
                 </q-card-section>
@@ -540,6 +547,10 @@ export default {
             })
         }
 
+        const createTraining = () => {
+            openEditDialog.value = true;
+        }
+
         const updateTraining = (trainingId, field, value) => {
             loading.value = true;
             if (field == 'athletes') {
@@ -679,6 +690,7 @@ export default {
             visibleColumns,
             openEditDialog,
             editTrainingId,
+            createTraining,
             trainingUpdated,
         }
     },

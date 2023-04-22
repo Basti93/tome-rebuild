@@ -1,0 +1,22 @@
+type Activity @guard{
+    id: ID!
+    log_name: String
+    description: String
+    subject_type: String
+    event: String
+    subject_id: ID
+    causer_type: String
+    causer_id: ID
+    properties: String
+    batch_uuid: String
+    created_at: DateTime
+    updated_at: DateTime
+}
+
+extend type Query @guard {
+
+    "List multiple groups."
+    activityPaginate(
+        orderBy: _ @orderBy(columns: ["id"])
+    ): [Activity!]! @can(ability: "viewAny") @paginate(defaultCount: 25)
+}

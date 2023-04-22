@@ -54,11 +54,13 @@
   </q-layout>
 </template>
 <script>
-import {computed, reactive, ref} from "vue";
+import {computed, onMounted, reactive, ref} from "vue";
 import {useQuasar} from "quasar";
 import apolloClient from "./apollo";
 import meQuery from "./queries/me.query.gql";
 import configsQuery from "./queries/config.query.gql";
+import * as PusherPushNotifications from "@pusher/push-notifications-web";
+import {ApolloBeamTokenProvider} from "./pusher/ApolloBeamTokenProvider";
 
 export default {
   setup() {
@@ -118,6 +120,13 @@ export default {
         show: computed(() => showMenuItem(loggedIn, true, true)  && hasPermission(me.value, 'edit-config'))
       },
       {
+        icon: 'log',
+        label: 'Aktivitäts Log',
+        separator: false,
+        to: "/activity-log",
+        show: computed(() => showMenuItem(loggedIn, true, true)  && hasPermission(me.value, 'view-activity-log'))
+      },
+      {
         icon: 'login',
         label: 'Login',
         separator: false,
@@ -169,8 +178,11 @@ export default {
     const updateLoginState = () => {
         loggedIn.value = localStorage.getItem('accessToken') !== null;
         if (loggedIn.value) {
-            apolloClient.query({query: meQuery, fetchPolicy: "network-only"}).then(({data}) => {
+            apolloClient.query({query: meQuery, fetchPolicy: "network-only"})
+            .then(({data}) => {
                 me.value = data.me;
+                fetchConfigs();
+                registerNotificationsClient();
             }).catch(() => {
                 $q.notify({
                     type: 'negative',
@@ -202,8 +214,22 @@ export default {
             })
         })
     }
-    updateLoginState();
-    fetchConfigs();
+    const registerNotificationsClient = () =>{
+        const beamsClient = new PusherPushNotifications.Client({
+            instanceId: import.meta.env.VITE_PUSHER_INSTANCE_ID,
+        });
+        beamsClient.getUserId()
+            .then(id => {
+                if(id !== me.value.id) {
+                    return beamsClient.stop();
+                }
+            })
+        beamsClient.start()
+            .then(() => beamsClient.setUserId(me.value.id, new ApolloBeamTokenProvider()))
+            .then(() => console.log('Successfully registered and subscribed!'))
+            .catch(console.error);
+
+    }
 
     function showMenuItem(isLoggedIn, authNeeded, showLoggedIn) {
       if (isLoggedIn.value && showLoggedIn) {
@@ -213,6 +239,10 @@ export default {
       }
       return false;
     }
+
+    onMounted(() => {
+      updateLoginState();
+    })
 
     return {
       leftDrawerOpen,

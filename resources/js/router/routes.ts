@@ -24,6 +24,11 @@ export default [
                 component: () => import("@/views/Trainings.vue"),
             },
             {
+                path: "/training/:id",
+                name: "Training",
+                component: () => import("@/views/Training.vue"),
+            },
+            {
                 path: "/users",
                 name: "Users",
                 component: () => import("@/views/Users.vue"),
@@ -47,6 +52,11 @@ export default [
                 path: "/profile",
                 name: "Profile",
                 component: () => import("@/views/Profile.vue"),
+            },
+            {
+                path: "/activity-log",
+                name: "ActivityLog",
+                component: () => import("@/views/ActivityLog.vue"),
             },
             {
                 path: "/logout",

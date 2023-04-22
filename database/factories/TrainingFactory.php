@@ -36,7 +36,8 @@ class TrainingFactory extends Factory
         return $this->afterMaking(function (Training $user) {
             // ...
         })->afterCreating(function (Training $training) {
-            $training->users()->attach(User::inRandomOrder()->take(random_int(1, 15))->pluck('id'), ['role' => $this->faker->randomElement(['athlete', 'coach']),]);
+            $training->users()->attach(User::inRandomOrder()->take(random_int(1, 3))->pluck('id'), ['role' => 'coach']);
+            $training->users()->attach(User::inRandomOrder()->take(random_int(1, 15))->pluck('id'), ['role' => 'athlete']);
             $training->groups()->attach(Group::inRandomOrder()->take(random_int(1, 3))->pluck('id'));
         });
     }

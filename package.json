@@ -11,10 +11,14 @@
         "axios": "^1.3.4",
         "laravel-vite-plugin": "^0.7.2",
         "sass": "1.32.12",
-        "vite": "^4.0.0"
+        "vite": "^4.0.0",
+        "vite-plugin-pwa": "^0.14.7",
+        "workbox-precaching": "^6.5.4",
+        "workbox-sw": "^6.5.4"
     },
     "dependencies": {
         "@apollo/client": "^3.7.10",
+        "@pusher/push-notifications-web": "^1.1.0",
         "@quasar/extras": "^1.16.0",
         "@vitejs/plugin-vue": "^4.1.0",
         "@vue/apollo-composable": "^4.0.0-beta.4",
@@ -23,6 +27,7 @@
         "graphql": "^16.6.0",
         "graphql-tag": "^2.12.6",
         "lodash": "^4.17.21",
+        "pusher-js": "^8.0.2",
         "quasar": "^2.11.9",
         "vue": "^3.2.47",
         "vue-loader": "^17.0.1",

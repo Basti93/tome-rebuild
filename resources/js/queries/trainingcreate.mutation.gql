@@ -1,0 +1,27 @@
+#import "./fragments/training.fragment.gql"
+
+mutation createTraining (
+    $name: String,
+    $description: String,
+    $status: Boolean,
+    $date_start: DateTime,
+    $date_end: DateTime,
+    $location: UpdateTrainingLocationInput,
+    $athletes: UpdateTrainingUserInput
+    $coaches: UpdateTrainingUserInput
+    $groups: UpdateTrainingGroupInput
+) {
+    createTraining(input: {
+        name: $name,
+        description: $description,
+        status: $status,
+        date_start: $date_start,
+        date_end: $date_end,
+        location: $location,
+        athletes: $athletes,
+        coaches: $coaches,
+        groups: $groups
+    }) {
+        ...TrainingFragment
+    }
+}

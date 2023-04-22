@@ -6,10 +6,11 @@ type Training @guard{
     date_start: DateTime!
     date_end: DateTime!
     location: Location @belongsTo
-    created_at: DateTime
     athletes: [User!] @hasMany
     coaches: [User!] @hasMany
     groups: [Group!] @hasMany
+    created_at: DateTime
+    updated_at: DateTime
 }
 
 type TrainingUserPivot {
@@ -94,7 +95,7 @@ extend type Query @guard {
 }
 
 extend type Mutation @guard {
-    createTraining(input: TrainingInput  @spread): Training! @can(ability: "create") @create
+    createTraining(input: UpdateTrainingInput  @spread): Training! @can(ability: "create") @create
     updateTraining(id: ID!, input: UpdateTrainingInput  @spread): Training! @can(ability: "update") @update
     updateTrainingAttendance(id: ID!, attend: Boolean!): Training! @can(ability: "updateAttendance", injectArgs: true) @field(resolver: "\\App\\GraphQL\\Mutations\\UpdateTrainingAttendance")
     deleteTraining(id: ID! @where(operator: "=")): Training @delete @can(ability: "delete", find: "id")
