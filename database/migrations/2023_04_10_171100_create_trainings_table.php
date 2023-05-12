@@ -19,6 +19,8 @@ return new class extends Migration
             $table->dateTimeTz('date_start');
             $table->dateTimeTz('date_end');
             $table->foreignId('location_id')->nullable()->constrained('locations')->restrictOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

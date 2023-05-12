@@ -948,6 +948,44 @@
   resolved "https://registry.npmjs.org/@graphql-typed-document-node/core/-/core-3.1.2.tgz"
   integrity sha512-9anpBMM9mEgZN4wr2v8wHJI2/u5TnnggewRN6OlvXTTnuVyoY19X6rOv9XTqKRw6dcGKwZsBi8n0kDE2I5i4VA==
 
+"@intlify/core-base@9.3.0-beta.17":
+  version "9.3.0-beta.17"
+  resolved "https://registry.npmjs.org/@intlify/core-base/-/core-base-9.3.0-beta.17.tgz"
+  integrity sha512-M/ZUU53G68YKN59E2gd/bOZB4TvFMWXvpWIgwsLJeAjktKYOt7JDSGdGHYGivKAG12pTGWeIeY6WmJCaDenloA==
+  dependencies:
+    "@intlify/devtools-if" "9.3.0-beta.17"
+    "@intlify/message-compiler" "9.3.0-beta.17"
+    "@intlify/shared" "9.3.0-beta.17"
+    "@intlify/vue-devtools" "9.3.0-beta.17"
+
+"@intlify/devtools-if@9.3.0-beta.17":
+  version "9.3.0-beta.17"
+  resolved "https://registry.npmjs.org/@intlify/devtools-if/-/devtools-if-9.3.0-beta.17.tgz"
+  integrity sha512-up5vm1ytN9Wm/loKjFlp5TuDy7dmBVgU3UOk1vLUXUfYH+EMlm07pUXNiIpSjdt4Eak+bSLfsWcqPwhsb2jknw==
+  dependencies:
+    "@intlify/shared" "9.3.0-beta.17"
+
+"@intlify/message-compiler@9.3.0-beta.17":
+  version "9.3.0-beta.17"
+  resolved "https://registry.npmjs.org/@intlify/message-compiler/-/message-compiler-9.3.0-beta.17.tgz"
+  integrity sha512-i7hvVIRk1Ax2uKa9xLRJCT57to08OhFMhFXXjWN07rmx5pWQYQ23MfX1xgggv9drnWTNhqEiD+u4EJeHoS5+Ww==
+  dependencies:
+    "@intlify/shared" "9.3.0-beta.17"
+    source-map "0.6.1"
+
+"@intlify/shared@9.3.0-beta.17":
+  version "9.3.0-beta.17"
+  resolved "https://registry.npmjs.org/@intlify/shared/-/shared-9.3.0-beta.17.tgz"
+  integrity sha512-mscf7RQsUTOil35jTij4KGW1RC9SWQjYScwLxP53Ns6g24iEd5HN7ksbt9O6FvTmlQuX77u+MXpBdfJsGqizLQ==
+
+"@intlify/vue-devtools@9.3.0-beta.17":
+  version "9.3.0-beta.17"
+  resolved "https://registry.npmjs.org/@intlify/vue-devtools/-/vue-devtools-9.3.0-beta.17.tgz"
+  integrity sha512-Wzl+3kZONjYG3lL8I8G+4H46s7m3CkxyoZXjZgC0zMy51cq1OTlOuOohcgxpwcSSYYVj9Y86PvlSakPNqHEweA==
+  dependencies:
+    "@intlify/core-base" "9.3.0-beta.17"
+    "@intlify/shared" "9.3.0-beta.17"
+
 "@jridgewell/gen-mapping@^0.3.0", "@jridgewell/gen-mapping@^0.3.2":
   version "0.3.2"
   resolved "https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.2.tgz"
@@ -1234,7 +1272,7 @@
     "@vue/compiler-dom" "3.2.47"
     "@vue/shared" "3.2.47"
 
-"@vue/devtools-api@^6.4.5":
+"@vue/devtools-api@^6.2.1", "@vue/devtools-api@^6.4.5":
   version "6.5.0"
   resolved "https://registry.npmjs.org/@vue/devtools-api/-/devtools-api-6.5.0.tgz"
   integrity sha512-o9KfBeaBmCKl10usN4crU53fYtC1r7jJwdGKjPT24t348rHxgfpZ0xL3Xm/gLUYnc0oTp8LAmrxOeLyu6tbk2Q==
@@ -2936,7 +2974,7 @@ source-map-support@~0.5.20:
     buffer-from "^1.0.0"
     source-map "^0.6.0"
 
-source-map@^0.6.0, source-map@^0.6.1:
+source-map@^0.6.0, source-map@^0.6.1, source-map@0.6.1:
   version "0.6.1"
   resolved "https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz"
   integrity sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==
@@ -3259,6 +3297,16 @@ vue-demi@^0.13.1:
   version "0.13.11"
   resolved "https://registry.npmjs.org/vue-demi/-/vue-demi-0.13.11.tgz"
   integrity sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==
+
+vue-i18n@^9.3.0-beta.17:
+  version "9.3.0-beta.17"
+  resolved "https://registry.npmjs.org/vue-i18n/-/vue-i18n-9.3.0-beta.17.tgz"
+  integrity sha512-2r6QWgwCMjzpLb6RuIU8XPw8vU9kJu8OE4zGIOOnNq1gMYrzawO1LlK/yxG7ugWmzFA/IBqSIs6ADu0Z+PO/Ow==
+  dependencies:
+    "@intlify/core-base" "9.3.0-beta.17"
+    "@intlify/shared" "9.3.0-beta.17"
+    "@intlify/vue-devtools" "9.3.0-beta.17"
+    "@vue/devtools-api" "^6.2.1"
 
 vue-loader@^17.0.1:
   version "17.0.1"

@@ -1,0 +1,19 @@
+mutation updateUserNotificationSettings (
+    $id: ID!,
+    $notificationSettings: UpdateUserNotificationSettingInput,
+) {
+    updateUserNotificationSettings(input: {
+        id: $id,
+        notificationSettings: $notificationSettings,
+    }) {
+        id
+        notificationSettingsPush {
+            id
+            name
+        }
+        notificationSettingsEmail {
+            id
+            name
+        }
+    }
+}

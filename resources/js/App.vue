@@ -221,12 +221,18 @@ export default {
         beamsClient.getUserId()
             .then(id => {
                 if(id !== me.value.id) {
+                    console.log('Unregistering old Beams user id:', id);
                     return beamsClient.stop();
                 }
             })
         beamsClient.start()
             .then(() => beamsClient.setUserId(me.value.id, new ApolloBeamTokenProvider()))
-            .then(() => console.log('Successfully registered and subscribed!'))
+            .then(() => {
+                beamsClient.getUserId().then(id => {
+                    console.log('Successfully registered with Beams. My Beams user id:', id);
+                });
+
+            })
             .catch(console.error);
 
     }

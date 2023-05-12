@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CreatedUpdatedBy;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,18 +10,17 @@ use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\Contracts\HasApiTokens as HasApiTokensContract;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasApiTokensContract, MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Prunable, HasRoles, LogsActivity;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Prunable, HasRoles, LogsActivity, CreatedUpdatedBy;
     protected $guard_name = 'sanctum';
     /**
      * The attributes that are mass assignable.
@@ -38,6 +38,8 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
     ];
 
     protected $appends = ['approved'];
+
+    public $pushNotificationType = 'users';
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -68,6 +70,22 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
         'email_verified_at' => 'datetime',
         'birthdate' => 'datetime',
     ];
+
+    /**
+     * model life cycle event listeners
+     */
+
+    public static function boot(){
+        parent::boot();
+        static::created(function ($instance){
+            $instance->notificationSettings()->attach([
+                1 => ['email' => true, 'push' => true],
+                2 => ['email' => true, 'push' => true],
+                3 => ['email' => true, 'push' => true],
+                4 => ['email' => true, 'push' => true],
+            ]);
+        });
+    }
 
     public function getApprovedAttribute(): bool
     {
@@ -108,6 +126,21 @@ class User extends Authenticatable implements HasApiTokensContract, MustVerifyEm
     public function trainings(): BelongsToMany
     {
         return $this->belongsToMany(Training::class, 'trainings_users')->withPivot(['attendance']);
+    }
+
+    public function notificationSettings(): BelongsToMany
+    {
+        return $this->belongsToMany(NotificationSetting::class, 'notification_settings_users')->withPivot(['email', 'push']);
+    }
+
+    public function notificationSettingsEmail(): BelongsToMany
+    {
+        return $this->belongsToMany(NotificationSetting::class, 'notification_settings_users')->withPivotValue('email', true);
+    }
+
+    public function notificationSettingsPush(): BelongsToMany
+    {
+        return $this->belongsToMany(NotificationSetting::class, 'notification_settings_users')->withPivotValue('push', true);
     }
 
     public function upcomingTrainingsAsCoach(): BelongsToMany

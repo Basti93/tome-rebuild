@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +28,12 @@ class Training extends Model
         'groups',
     ];
 
-    use HasFactory, LogsActivity;
+    protected $casts = [
+        'date_start' => 'datetime',
+        'date_end' => 'datetime',
+    ];
+
+    use HasFactory, LogsActivity, CreatedUpdatedBy;
 
     public function getActivitylogOptions(): LogOptions
     {

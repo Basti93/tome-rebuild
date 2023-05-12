@@ -17,10 +17,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            NotificationTableSeeder::class,
             UserTableSeeder::class,
             PermissionSeeder::class,
             ConfigTableSeeder::class,
         ]);
+
+        // Test Zeugs
         Group::factory(3)->create();
         Location::factory(1)->create();
         User::factory(50)->create();
@@ -31,7 +34,6 @@ class DatabaseSeeder extends Seeder
         $trainer->groups()->attach(1, ['role' => 'coach']);
         $trainer->groups()->attach(1, ['role' => 'athlete']);
         $user->groups()->attach(1, ['role' => 'athlete']);
-
         $trainingsWithGroup = Training::whereHas('groups', function ($query) {
             $query->whereGroupId(1);
         });

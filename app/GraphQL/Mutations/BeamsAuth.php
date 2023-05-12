@@ -46,7 +46,7 @@ class BeamsAuth
         // as the channel user id he wants to access to
         abort_unless(auth()->id() == $user->id, 401);
 
-        $beamsToken = $beamsClient->generateToken((string) auth()->id());
+        $beamsToken = $beamsClient->generateToken("App.Models.User.".auth()->id());
 
         return $beamsToken;
     }

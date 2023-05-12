@@ -1,0 +1,15 @@
+type NotificationSetting @guard {
+    id: ID!
+    name: String!
+    pivot: NotificationSettingUserPivot!
+}
+
+type NotificationSettingUserPivot {
+    email: Boolean!
+    push: Boolean!
+}
+
+extend type Query @guard {
+    "Get all configs."
+    notificationSettings: [NotificationSetting!]! @all @can(ability: "viewAny")
+}

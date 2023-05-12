@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Permission\PermissionRegistrar;
 
 class Group extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, CreatedUpdatedBy;
 
 
     /**

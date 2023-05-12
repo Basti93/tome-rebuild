@@ -1,0 +1,22 @@
+#import "./fragments/user.fragment.gql"
+
+query profileData {
+    me {
+        ...UserFragment
+        notificationSettingsPush {
+            id
+            name
+        }
+        notificationSettingsEmail {
+            id
+            name
+        }
+        roles {
+            name
+            permissions {
+                name
+            }
+        }
+
+    }
+}

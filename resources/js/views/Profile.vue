@@ -1,6 +1,6 @@
 <template>
   <q-page>
-      <div class="row q-ma-ma justify-center">
+      <div class="row justify-center q-ma-md items-lg-start">
         <q-card class="col-12 col-lg-3 q-mt-md">
                   <q-card-section>
                       <q-avatar class="q-ma-md-lg q-ma-sm" size="150px">
@@ -39,7 +39,7 @@
                     </q-card-actions>
                   </q-form>
               </q-card>
-        <q-card class="col-12 col-lg-4 q-mt-md q-ml-lg-sm">
+        <q-card class="col-12 col-lg-3 q-mt-md q-ml-lg-sm">
                   <q-form @submit.prevent="updateMe" @reset="resetMe">
                   <q-card-section>
                       <q-input
@@ -61,14 +61,11 @@
                         v-model="editMe.email"
                         label="E-Mail*"
                         :rules="[val => val && val.length > 0 || 'E-Mail darf nicht leer sein']"/>
-                      <q-date
-                              :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein' && date.isValid(val) || 'Kein gültiges Datum.']"
-                              v-model="editMe.birthdate"
-                              no-unset
-                              :title="date.formatDate(editMe.birthdate, 'DD.MM.YYYY')"
-                              subtitle="Geburtstag*"
-                              mask="YYYY-MM-DD">
-                      </q-date>
+                      <q-input
+                        label="Geburtsdatum"
+                        type="date"
+                        v-model="editMe.birthdate"
+                        :rules="[val => val && val.length > 0 || 'Geburtsdatum darf nicht leer sein']"/>
                       <q-input
                         type="text"
                         v-model="editMe.phone"
@@ -82,6 +79,7 @@
                   </q-card-actions>
                   </q-form>
               </q-card>
+
         <q-card class="col-12 col-lg-3 q-mt-md q-ml-lg-sm">
                 <q-card-section>
                   <div class="text-h6">Passwort ändern</div>
@@ -114,22 +112,44 @@
                     </q-form>
                 </q-card-section>
               </q-card>
-          <q-card class="col-12 col-lg-3 q-mt-md q-ml-lg-sm">
+        <q-card class="col-12 col-lg-6 q-mt-md q-ml-lg-sm">
               <q-card-section>
-                <div class="text-h6">Benachrichtigungen</div>
+                  <div class="text-h6">Benachrichtigungen</div>
               </q-card-section>
               <q-card-section>
-                  <q-toggle
-                          v-model="editMe.notifications.trainingCanceled"
-                          label="Training abgesagt 24 Stunden vor Trainingsbeginn"
-                          color="primary"
-                          :disable="loading"></q-toggle>
-                  <q-toggle
-                          v-model="editMe.notifications.trainingLocationChanged"
-                          label="Trainingsort geändert 24 Stunden vor Trainingsbeginn"
-                          color="primary"
-                          :disable="loading"></q-toggle>
+                  <q-markup-table flat wrap-cells>
+                      <thead>
+                      <tr>
+                          <th class="text-left">Bezeichnung</th>
+                          <th class="text-left">Push</th>
+                          <th class="text-left">E-Mail</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      <tr v-for="notificationSetting in notificationSettings"
+                          :key="notificationSetting.id">
+                          <td>{{ $t("message.notificationSettings." + notificationSetting.name) }}</td>
+                          <td>
+                              <q-checkbox
+                                      :val="notificationSetting.id"
+                                      v-model="editMe.notificationSettingsPush"
+                                      label="Push"
+                              ></q-checkbox>
+                          </td>
+                          <td>
+                              <q-checkbox
+                                      :val="notificationSetting.id"
+                                      label="E-Mail"
+                                      v-model="editMe.notificationSettingsEmail"
+                              ></q-checkbox>
+                          </td>
+                      </tr>
+                      </tbody>
+                  </q-markup-table>
               </q-card-section>
+            <q-card-actions>
+                <q-btn type="button" color="primary" block class="mt-2" :disabled="loading" @click="updateNotificationSettings">Speichern</q-btn>
+            </q-card-actions>
           </q-card>
       </div>
   </q-page>
@@ -141,10 +161,13 @@ import {computed, reactive, ref, watch} from "vue";
 import updatepassword from "../queries/updatepassword.mutation.gql";
 import {date, useQuasar} from "quasar";
 import apolloClient from "../apollo";
-import meQuery from "../queries/me.query.gql";
+import profileQuery from "../queries/profiledata.query.gql";
+import notificationSettingsQuery from "../queries/notificationsetting.query.gql";
 import meMutation from "../queries/me.mutation.gql";
+import notificationMutation from "../queries/notificationsettings.mutation.gql";
 import uploadProfileImageMutation from "../queries/uploadprofileimage.mutation.gql";
-import {useNotifications} from "../notifications";
+import {useQuery} from "@vue/apollo-composable";
+import {useI18n} from "vue-i18n";
 
 export default {
   emits: ["user-updated"],
@@ -160,10 +183,9 @@ export default {
       email: '',
       birthdate: '',
       phone: '',
-      notifications: {
-        trainingCanceled: false,
-        trainingLocationChanged: false
-      }})
+      notificationSettingsEmail: [],
+      notificationSettingsPush: [],
+    })
     const profileImageUpload = ref(null);
     const passwordForm = ref('');
     const current_password = ref('');
@@ -171,20 +193,16 @@ export default {
     const password_confirmation = ref('');
     const passwordValidationErrors = ref('');
     const profileValidationErrors = ref('');
+    const {result: notificationSettingsResult} = useQuery(notificationSettingsQuery);
+    const notificationSettings = computed(() => notificationSettingsResult.value?.notificationSettings ?? [])
 
-    watch(editMe, () => {
-        if (editMe.value.notifications) {
-            if (editMe.value.notifications.trainingCanceled) {
-
-            }
-        }
-    }, {deep: true})
-
-    const fetchMe = () => {
+    const fetchProfileData = () => {
         loading.value = true;
-        apolloClient.query({query: meQuery, fetchPolicy: "network-only"})
+        apolloClient.query({query: profileQuery, fetchPolicy: "network-only"})
         .then(({data}) => {
+            me.value = data.me;
             updateUserObjects(data.me);
+            updateNotificationSettingsObjects(data.me);
         }).catch(({graphQLErrors}) => {
             if (graphQLErrors && graphQLErrors.some(e => e.message === 'Unauthenticated.')) {
                 localStorage.removeItem('accessToken')
@@ -194,11 +212,12 @@ export default {
                     message: 'Fehler beim Laden des Benutzers'
                 })
             }
+        }).finally(() => {
+            loading.value = false
         })
-        loading.value = false;
     }
 
-    fetchMe();
+    fetchProfileData();
 
     const changePassword = () => {
         loading.value = true;
@@ -228,16 +247,55 @@ export default {
         })
       }
 
+      const updateNotificationSettingsObjects = (user) => {
+          editMe.value.notificationSettingsEmail = user.notificationSettingsEmail.map(ns => ns.id);
+          editMe.value.notificationSettingsPush = user.notificationSettingsPush.map(ns => ns.id);
+      }
+
       const updateUserObjects = (user) => {
-          me.value = user;
-          editMe.value = {...me.value};
-          editMe.value.notifications = {
-              trainingCanceled: true,
-              trainingLocationChanged: true,
-          };
-          editMe.value.birthdate = date.formatDate(editMe.value.birthdate, 'YYYY-MM-DD')
+          editMe.value.id = user.id
+          editMe.value.firstname = user.firstname
+          editMe.value.lastname = user.lastname
+          editMe.value.nickname = user.nickname
+          editMe.value.email = user.email
+          editMe.value.birthdate = date.formatDate(new Date(user.birthdate), 'YYYY-MM-DD'),
+          editMe.value.phone = user.phone
+          editMe.value.birthdate = date.formatDate(user.birthdate, 'YYYY-MM-DD')
           emit('user-updated');
       }
+
+      const updateNotificationSettings = () => {
+          loading.value = true;
+          apolloClient.mutate({
+              mutation: notificationMutation,
+              variables: {
+                  id: editMe.value.id,
+                  notificationSettings: {
+                      sync: notificationSettings.value.map(ns => ({
+                          id: ns.id,
+                          email: editMe.value.notificationSettingsEmail.includes(ns.id),
+                          push: editMe.value.notificationSettingsPush.includes(ns.id),
+                      })),
+                  }
+              },
+          }).then(({data}) => {
+              updateNotificationSettingsObjects(data.updateUserNotificationSettings);
+              $q.notify({
+                  type: 'positive',
+                  message: 'Einstellungen erfolgreich aktualisiert'
+              })
+          }).catch(({graphQLErrors}) => {
+              if (graphQLErrors[0].extensions.category === "validation") {
+                  profileValidationErrors.value = graphQLErrors[0].extensions.validation;
+              }
+              $q.notify({
+                  type: 'negative',
+                  message: 'Fehler beim Aktualisieren der Einstellungen'
+              })
+          }).finally(() => {
+              loading.value = false;
+          })
+      };
 
       const updateMe = () => {
           loading.value = true;
@@ -250,10 +308,11 @@ export default {
                   lastname: editMe.value.lastname,
                   nickname: editMe.value.nickname,
                   email: editMe.value.email,
-                  birthdate: editMe.value.birthdate,
+                  birthdate: date.formatDate(new Date(editMe.value.birthdate), 'YYYY-MM-DD'),
                   phone: editMe.value.phone,
               },
           }).then(({data}) => {
+              me.value = data.updateMe;
               updateUserObjects(data.updateMe);
               $q.notify({
                   type: 'positive',
@@ -272,7 +331,7 @@ export default {
           })
       }
       const resetMe = () => {
-          editMe.value = Object.assign(me.value);
+          updateUserObjects(me.value);
       }
 
       const uploadProfileImage = () => {
@@ -289,7 +348,7 @@ export default {
                   message: 'Profilbild erfolgreich aktualisiert'
               })
               profileImageUpload.value = null;
-              fetchMe()
+              fetchProfileData()
           }).catch(({graphQLErrors}) => {
               if (graphQLErrors[0].extensions.category === "validation") {
                   profileValidationErrors.value = graphQLErrors[0].extensions.validation;
@@ -317,9 +376,11 @@ export default {
       editMe,
       date,
       passwordForm,
+      notificationSettings,
       profileImageUpload,
       uploadProfileImage,
       uploadProfileImageForm,
+      updateNotificationSettings,
     }
   },
 }

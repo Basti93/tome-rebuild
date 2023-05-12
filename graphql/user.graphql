@@ -18,7 +18,15 @@ type User {
     upcomingTrainingsAsCoach: [Training!] @belongsToMany
     groups: [Group!]! @belongsToMany
     approved: Boolean!
+    notificationSettingsEmail: [NotificationSetting!]! @belongsToMany
+    notificationSettingsPush: [NotificationSetting!]! @belongsToMany
     pivot: TrainingUserPivot
+}
+
+type UserNotificationSettings {
+    id: ID!
+    notificationSettingsEmail: [NotificationSetting!]! @belongsToMany
+    notificationSettingsPush: [NotificationSetting!]! @belongsToMany
 }
 
 type Image {
@@ -42,6 +50,19 @@ input UpdateUserRoleInput {
     delete: [ID!] @rules(apply: ["exists:roles,id"])
     connect: [ID!] @rules(apply: ["exists:roles,id"])
     disconnect: [ID!] @rules(apply: ["exists:roles,id"])
+}
+
+input ConnectUserNotificationSetting {
+    id: ID!
+    email: Boolean
+    push: Boolean
+}
+
+input UpdateUserNotificationSettingInput {
+    sync: [ConnectUserNotificationSetting!]
+    delete: [ID!]
+    connect: [ConnectUserNotificationSetting!]
+    disconnect: [ID!]
 }
 
 input UpdateUserInput {
@@ -74,6 +95,11 @@ input UpdateMeInput @validator(class: "App\\GraphQL\\Validators\\UpdateMeInputVa
     phone: String
     birthdate: Date!
     email: String!
+}
+
+input UpdateMeNotificationSettingsInput {
+    id: ID!
+    notificationSettings: UpdateUserNotificationSettingInput
 }
 
 "Indicates what fields are available at the top level of a query operation."
@@ -115,6 +141,8 @@ extend type Mutation @guard {
     beamsAuth(id: ID!): BeamsToken @field(resolver: "\\App\\GraphQL\\Mutations\\BeamsAuth")
     "Update the authenticated user."
     updateMe(input: UpdateMeInput  @spread): User! @can(ability: "updateMe", injectArgs: true, model: "App\\Models\\User") @update
+    "Update the authenticated user notification settings."
+    updateUserNotificationSettings(input: UpdateMeNotificationSettingsInput  @spread): User! @can(ability: "updateMe", injectArgs: true, model: "App\\Models\\User") @update
     "Update a user by ID."
     updateUser(id: ID!, input: UpdateUserInput  @spread): User! @can(ability: "update", injectArgs: true, model: "App\\Models\\User") @update
     "Delete a user by ID."

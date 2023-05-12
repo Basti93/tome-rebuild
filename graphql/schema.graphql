@@ -4,6 +4,7 @@ scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 
 
 #import config.graphql
+#import notificationsetting.graphql
 #import role.graphql
 #import user.graphql
 #import group.graphql

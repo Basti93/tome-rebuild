@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('password');
             $table->string('image')->nullable();
             $table->rememberToken();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

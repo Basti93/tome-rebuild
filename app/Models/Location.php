@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
@@ -9,7 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Location extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, CreatedUpdatedBy;
 
     /**
      * The attributes that are mass assignable.
